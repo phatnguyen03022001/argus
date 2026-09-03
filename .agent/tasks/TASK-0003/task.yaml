@@ -1,13 +1,13 @@
 protocol_version: 3
 
 task_id: TASK-0003
-task_revision: 2
+task_revision: 3
 state: APPROVED
 
 origin:
   type: user_request
   task_id: ""
-  gap_id: "PHASE3_REPOSITORY_OBSERVATION_RECOVERY"
+  gap_id: "PHASE3_RECOVERY_HASH_SERIALIZATION"
 
 architect_binding:
   target_repository: phatnguyen03022001/argus
@@ -73,15 +73,25 @@ objective: >-
 scope:
   required_changes:
     - >-
-      Revision-2 recovery may adopt exactly one pre-existing operator-local dirty implementation state: original
+      Revision-3 recovery may adopt exactly one pre-existing operator-local dirty implementation state: original
       execution base 2b5e3496a94f6ba2df6da8dbe015a67c6b1311d3 with combined tracked-diff/untracked-content SHA-256
       476dee24be553e5d21e8f572585e8aced435e1eda0fc97f3c99f5519b0e92cb1 and exactly these changed paths:
       app/globals.css, app/page.tsx, app/repositories/route.ts, src/persistence.ts, src/repositories.ts,
       src/repository-observations.ts, src/workspace-app.ts, src/workspace-home.tsx, src/workspace-store.ts,
       tests/application.test.tsx, tests/next-adapter.test.tsx, tests/repository-observation.test.ts, and
-      tests/workspace.test.ts. Before any implementation mutation, recompute the same canonical hash algorithm and
-      exact path set on the revision-2 handoff checkout. Any mismatch is STALE_STATE/BLOCKED; do not reset, stash,
+      tests/workspace.test.ts. Before any implementation mutation, recompute the canonical recovery hash using the exact normative script in the next requirement and
+      exact path set on the revision-3 handoff checkout. Any mismatch is STALE_STATE/BLOCKED; do not reset, stash,
       discard, or silently adopt another dirty state.
+    - >-
+      Canonical recovery-hash serialization is normative. Execute the following exact POSIX-shell script from the
+      Argus repository root before any implementation mutation. Its stdout is the authoritative recovery hash:
+      `export LC_ALL=C; { git diff --binary; git ls-files --others --exclude-standard -z | sort -z | xargs -0 -I{} sh -c 'printf "FILE:%s\n" "$1"; cat "$1"' sh {}; } | shasum -a 256 | awk '{print $1}'`.
+      The hashed input byte stream is therefore exactly: (1) stdout bytes from `git diff --binary` against current
+      HEAD for tracked worktree changes; then (2) untracked repository-relative paths from
+      `git ls-files --others --exclude-standard -z`, bytewise/NUL sorted under LC_ALL=C, each serialized as the bytes
+      `FILE:` + exact path + newline followed immediately by that file's exact bytes, with no extra separator.
+      For the authorized recovery candidate the command must output exactly
+      476dee24be553e5d21e8f572585e8aced435e1eda0fc97f3c99f5519b0e92cb1.
     - >-
       Resolve the reproduced correctness defect before final verification: mutable local observations such as dirty
       state, remotes, branch/upstream and locally computed ahead/behind can change while HEAD is unchanged, so HEAD
@@ -173,7 +183,7 @@ scope:
   expected_files_are_restrictive: false
 
 invariants:
-  - "Revision-2 recovery may adopt only the exact dirty TASK-0003 candidate hash 476dee24be553e5d21e8f572585e8aced435e1eda0fc97f3c99f5519b0e92cb1 over the exact 13 authorized changed paths; mismatch fails closed and no local state is discarded."
+  - "Revision-3 recovery may adopt only the exact dirty TASK-0003 candidate hash 476dee24be553e5d21e8f572585e8aced435e1eda0fc97f3c99f5519b0e92cb1 over the exact 13 authorized changed paths; mismatch fails closed and no local state is discarded."
   - "Mutable local Git facts must not be treated as conflicting immutable-version evidence merely because HEAD is unchanged across observations."
   - "GitHub remote evidence remains canonical for GitHub-hosted repository refs/objects; Argus stores observations/indexes only."
   - "Local Git/workspace state is operator-owned execution evidence and must never be reset, cleaned, stashed, checked out, fetched, pulled, committed, pushed, or otherwise mutated by TASK-0003."
@@ -271,16 +281,16 @@ acceptance_criteria:
     evidence_required: "Base-to-implementation diff contains only authorized repository-observation/UI/persistence/test/README changes, report is a report-only direct child, final topology is {main}, and no health/sync/environment/provider/task/agent/business/deployment behavior or external-repository mutation appears."
 
   - id: AC-10
-    requirement: "Revision-2 recovery preserves exact local-candidate provenance and closes the reproduced mutable-fact reconciliation defect."
+    requirement: "Revision-3 recovery preserves exact local-candidate provenance and closes the reproduced mutable-fact reconciliation defect."
     evidence_required: "Executor preflight proves exact original base, recovery patch SHA-256 and 13-path set before mutation; regression proves dirty/remotes/branch/upstream/ahead-behind changes at unchanged HEAD do not create false CONFLICTED evidence while genuine immutable-version conflict semantics remain intact."
 
 verification:
   executor_checks:
     - id: CHECK-0
-      command_or_check: "Before any implementation mutation, prove local HEAD is the exact revision-2 handoff base, recompute the authorized recovery candidate hash/path set against that base, and require exact match to 476dee24be553e5d21e8f572585e8aced435e1eda0fc97f3c99f5519b0e92cb1 plus the 13 authorized paths. Do not clean/reset/stash/adopt on mismatch."
+      command_or_check: "Before any implementation mutation, prove local HEAD is the exact revision-3 handoff base, run the exact normative LC_ALL=C recovery-hash script defined in scope, recompute the authorized path set, and require exact match to 476dee24be553e5d21e8f572585e8aced435e1eda0fc97f3c99f5519b0e92cb1 plus the 13 authorized paths. Do not clean/reset/stash/adopt on mismatch."
       required: true
     - id: CHECK-1
-      command_or_check: "Fresh-preflight exact TASK-0003/base/pinned authority, accepted TASK-0002 review, MAIN_ONLY topology, clean local execution copy, system git/gh read capability, package/test/build/runtime capability before mutation."
+      command_or_check: "Fresh-preflight exact TASK-0003/base/pinned authority, accepted TASK-0002 review, MAIN_ONLY topology, exact authorized dirty recovery candidate with no unrelated local drift, system git/gh read capability, package/test/build/runtime capability before mutation."
       required: true
     - id: CHECK-2
       command_or_check: "Build isolated temporary repository fixtures including ordinary dirs, normal repos, linked worktrees, dirty/detached states, nested-stop cases and symlink-cycle cases; snapshot HEAD/refs/index/config/files/remotes before observation and prove unchanged afterward."
