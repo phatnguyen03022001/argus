@@ -68,14 +68,14 @@ describe("schema migration semantics", () => {
     expect(() => api.runMigrations(store.db, [
       ...api.MIGRATIONS,
       {
-        version: 2,
+        version: 3,
         up(db: typeof store.db) {
           db.exec("CREATE TABLE should_rollback (id TEXT PRIMARY KEY)");
           throw new Error("intentional migration failure");
         },
       },
     ])).toThrow(/intentional migration failure/i);
-    expect(api.readSchemaVersion(store.db)).toBe(1);
+    expect(api.readSchemaVersion(store.db)).toBe(2);
     const rollbackProbe = store.db.prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'should_rollback'").get();
     expect(rollbackProbe).toBeUndefined();
 
@@ -110,7 +110,7 @@ describe("export, restore, and audit", () => {
     expect(() => api.createWorkspace(source, { label: "Duplicate", root: workspaceRoot })).toThrow();
     const exported = api.exportState(source);
     const exportedObject = JSON.parse(exported);
-    expect(exportedObject).toMatchObject({ formatVersion: 1, schemaVersion: 1 });
+    expect(exportedObject).toMatchObject({ formatVersion: 1, schemaVersion: 2 });
     expect(exportedObject.integrity).toMatchObject({ algorithm: "sha256" });
     source.close();
 

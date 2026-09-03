@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import Database from "better-sqlite3";
 
-export const CURRENT_SCHEMA_VERSION = 1;
+export const CURRENT_SCHEMA_VERSION = 2;
 export type SqliteDatabase = InstanceType<typeof Database>;
 
 export interface Migration {
@@ -55,6 +55,62 @@ export const MIGRATIONS: Migration[] = [
           post_record_id TEXT,
           post_version INTEGER
         );
+      `);
+    },
+  },
+  {
+    version: 2,
+    up(db) {
+      db.exec(`
+        CREATE TABLE repository_worktrees (
+          id TEXT PRIMARY KEY,
+          workspace_id TEXT NOT NULL,
+          local_path TEXT NOT NULL,
+          repository_kind TEXT NOT NULL CHECK (repository_kind IN ('working-tree', 'linked-worktree')),
+          git_dir TEXT NOT NULL,
+          common_dir TEXT NOT NULL,
+          canonical_repository_identity TEXT NOT NULL,
+          github_repository_id TEXT,
+          github_alias TEXT,
+          github_ref_name TEXT,
+          remote_name TEXT,
+          remote_url TEXT,
+          first_seen_at TEXT NOT NULL,
+          last_seen_at TEXT NOT NULL,
+          FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+          UNIQUE (workspace_id, local_path)
+        );
+
+        CREATE INDEX repository_worktrees_canonical_identity_idx
+          ON repository_worktrees(canonical_repository_identity);
+
+        CREATE TABLE repository_observations (
+          event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+          observation_id TEXT NOT NULL,
+          workspace_id TEXT NOT NULL,
+          worktree_id TEXT NOT NULL,
+          source_identity TEXT NOT NULL,
+          subject_identity TEXT NOT NULL,
+          observation_kind TEXT NOT NULL,
+          value_json TEXT,
+          absence_reason TEXT,
+          observed_at TEXT NOT NULL,
+          checked_at TEXT NOT NULL,
+          availability TEXT NOT NULL CHECK (availability IN ('AVAILABLE', 'UNAVAILABLE', 'UNKNOWN')),
+          freshness TEXT NOT NULL CHECK (freshness IN ('CURRENT', 'STALE', 'UNKNOWN')),
+          source_version TEXT,
+          provenance TEXT NOT NULL,
+          conflict_state TEXT NOT NULL CHECK (conflict_state IN ('NONE', 'CONFLICTED')),
+          conflict_value_json TEXT,
+          FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE,
+          FOREIGN KEY (worktree_id) REFERENCES repository_worktrees(id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX repository_observations_identity_idx
+          ON repository_observations(observation_id, event_id);
+
+        CREATE INDEX repository_observations_worktree_kind_idx
+          ON repository_observations(worktree_id, observation_kind, event_id);
       `);
     },
   },

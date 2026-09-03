@@ -10,6 +10,6 @@ type HomeProps = {
 export default async function Home({ searchParams }: HomeProps) {
   const params = await searchParams;
   const error = Array.isArray(params.error) ? params.error[0] : params.error;
-  const { workspaces } = loadWorkspaceHome();
-  return <WorkspaceHome workspaces={workspaces} error={error} />;
+  const { workspaces, repositories } = loadWorkspaceHome();
+  return <WorkspaceHome workspaces={workspaces} repositories={repositories} error={error} />;
 }

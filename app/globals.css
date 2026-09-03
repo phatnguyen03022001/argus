@@ -50,4 +50,32 @@ h2 { margin: 0 0 16px; font-size: 18px; }
   .panel { padding: 18px; }
   .workspace-row { display: block; }
   .workspace-row small { display: inline-block; margin-top: 8px; }
+  .workspace-actions { justify-content: space-between; margin-top: 10px; }
+  .repository-title { display: block; }
+  .repository-title > span { display: inline-block; margin-top: 8px; }
+  .repository-facts, .evidence-grid { grid-template-columns: 1fr; }
 }
+
+
+.workspace-actions { display: flex; align-items: center; gap: 12px; }
+.workspace-actions form { margin: 0; }
+.workspace-actions button { border: 1px solid color-mix(in srgb, CanvasText 18%, transparent); border-radius: 9px; padding: 8px 10px; background: Canvas; color: CanvasText; cursor: pointer; }
+
+.repository-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 16px; }
+.repository-row { border-top: 1px solid color-mix(in srgb, CanvasText 10%, transparent); padding-top: 18px; }
+.repository-row:first-child { border-top: 0; padding-top: 0; }
+.repository-title { display: flex; justify-content: space-between; gap: 16px; align-items: start; }
+.repository-title strong, .repository-title code, .repository-title small { display: block; }
+.repository-title strong { margin-top: 3px; }
+.repository-title code { margin-top: 6px; font-size: 13px; opacity: 0.65; overflow-wrap: anywhere; }
+.repository-title > span { font-size: 12px; opacity: 0.6; white-space: nowrap; }
+.repository-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px 18px; margin: 18px 0 0; }
+.repository-facts div { min-width: 0; }
+.repository-facts dt { font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; opacity: 0.55; }
+.repository-facts dd { margin: 4px 0 0; font-size: 13px; overflow-wrap: anywhere; }
+.repository-facts code { font-size: 12px; }
+.evidence-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+.evidence-grid > div { border: 1px solid color-mix(in srgb, CanvasText 10%, transparent); border-radius: 10px; padding: 10px; }
+.evidence-grid small, .evidence-grid strong, .evidence-grid span { display: block; }
+.evidence-grid strong { margin-top: 4px; font-size: 12px; }
+.evidence-grid span { margin-top: 4px; font-size: 11px; opacity: 0.65; overflow-wrap: anywhere; }
