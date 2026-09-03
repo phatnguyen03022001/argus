@@ -390,7 +390,7 @@ function persistLocalObservations(store: Store, input: {
     sourceVersion: null,
     provenance: "system-git:read-only",
   };
-  const facts: Array<{ kind: string; value: unknown | null; absenceReason: string | null }> = [
+  const facts: Array<{ kind: string; value: unknown | null; absenceReason: string | null; sourceVersion: string | null }> = [
     {
       kind: "git.identity",
       value: {
@@ -401,14 +401,15 @@ function persistLocalObservations(store: Store, input: {
         canonicalRepositoryIdentity: input.canonicalRepositoryIdentity,
       },
       absenceReason: null,
+      sourceVersion: null,
     },
-    { kind: "git.head", value: input.local.head, absenceReason: null },
-    { kind: "git.branch", value: input.local.branch, absenceReason: input.local.branch === null ? "detached" : null },
-    { kind: "git.detached", value: input.local.detached, absenceReason: null },
-    { kind: "git.dirty", value: input.local.dirty, absenceReason: null },
-    { kind: "git.remotes", value: input.local.remotes, absenceReason: input.local.remotes.length === 0 ? "no-remotes" : null },
-    { kind: "git.upstream", value: input.local.upstream, absenceReason: input.local.upstream === null ? "no-upstream" : null },
-    { kind: "git.ahead-behind", value: input.local.aheadBehind, absenceReason: input.local.aheadBehind === null ? "not-locally-provable" : null },
+    { kind: "git.head", value: input.local.head, absenceReason: null, sourceVersion: input.local.head },
+    { kind: "git.branch", value: input.local.branch, absenceReason: input.local.branch === null ? "detached" : null, sourceVersion: null },
+    { kind: "git.detached", value: input.local.detached, absenceReason: null, sourceVersion: null },
+    { kind: "git.dirty", value: input.local.dirty, absenceReason: null, sourceVersion: null },
+    { kind: "git.remotes", value: input.local.remotes, absenceReason: input.local.remotes.length === 0 ? "no-remotes" : null, sourceVersion: null },
+    { kind: "git.upstream", value: input.local.upstream, absenceReason: input.local.upstream === null ? "no-upstream" : null, sourceVersion: null },
+    { kind: "git.ahead-behind", value: input.local.aheadBehind, absenceReason: input.local.aheadBehind === null ? "not-locally-provable" : null, sourceVersion: null },
   ];
   for (const fact of facts) persistExternalObservation(store, { ...shared, ...fact });
 }

@@ -111,7 +111,11 @@ function executeGit(cwd: string, args: string[]): CommandResult {
   if (!gitObservationArgsAllowed(args)) {
     throw new Error(`Git observation command is not allowed: git ${args.join(" ")}`);
   }
-  const result = spawnSync("git", args, { cwd, encoding: "utf8" });
+  const result = spawnSync("git", args, {
+    cwd,
+    encoding: "utf8",
+    env: { ...process.env, GIT_OPTIONAL_LOCKS: "0" },
+  });
   return {
     status: result.status,
     stdout: result.stdout ?? "",

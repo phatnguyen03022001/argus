@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readFile, realpath, rm, symlink, utimes, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
@@ -116,6 +116,43 @@ test("local Git observation returns raw clean/dirty/branch/upstream evidence and
 
   expect(() => api.runReadOnlyGit(repo, ["fetch"])).toThrow(/not allowed/i);
   expect(() => api.runReadOnlyGit(repo, ["reset", "--hard", "HEAD"])).toThrow(/not allowed/i);
+});
+
+test("production local Git observation leaves stale-stat repositories byte-for-byte unchanged", async () => {
+  const api = await import("../src/workspace-store");
+  const root = await tempDir("argus-stale-stat-observation-");
+  const repo = path.join(root, "repo");
+  await mkdir(repo);
+  git(repo, ["init", "-b", "main"]);
+  const tracked = path.join(repo, "tracked.txt");
+  await writeFile(tracked, "tracked\n", "utf8");
+  git(repo, ["add", "tracked.txt"]);
+  git(repo, ["commit", "-m", "fixture"]);
+  git(repo, ["remote", "add", "origin", "https://github.com/acme/widgets.git"]);
+
+  // Only mtime changes: default `git status` can refresh this stale index entry.
+  const staleTime = new Date(Date.now() - 60_000);
+  await utimes(tracked, staleTime, staleTime);
+  const before = {
+    index: await readFile(path.join(repo, ".git", "index")),
+    head: git(repo, ["rev-parse", "HEAD"]),
+    refs: git(repo, ["show-ref"]),
+    config: await readFile(path.join(repo, ".git", "config"), "utf8"),
+    tracked: await readFile(tracked, "utf8"),
+    remotes: git(repo, ["remote", "-v"]),
+  };
+
+  api.observeLocalRepository({ path: await realpath(repo), kind: "working-tree" });
+
+  const after = {
+    index: await readFile(path.join(repo, ".git", "index")),
+    head: git(repo, ["rev-parse", "HEAD"]),
+    refs: git(repo, ["show-ref"]),
+    config: await readFile(path.join(repo, ".git", "config"), "utf8"),
+    tracked: await readFile(tracked, "utf8"),
+    remotes: git(repo, ["remote", "-v"]),
+  };
+  expect(after).toEqual(before);
 });
 
 test("local Git observation represents detached state explicitly", async () => {
@@ -400,10 +437,30 @@ test("mutable local facts refresh normally at the same HEAD instead of becoming 
   await writeFile(path.join(repo, "tracked.txt"), "one\n", "utf8");
   git(repo, ["add", "tracked.txt"]);
   git(repo, ["commit", "-m", "one"]);
+  const immutableHead = git(repo, ["rev-parse", "HEAD"]);
 
   const store = api.openStore({ dataRoot });
   const workspace = api.createWorkspace(store, { label: "Mutable local facts", root: workspaceRoot });
   await api.refreshWorkspaceRepositories(store, workspace.id, { checkedAt: "2026-09-03T09:10:00.000Z" });
+  const sourceVersions = store.db.prepare(`
+    SELECT observation_kind, source_version
+    FROM repository_observations
+    WHERE observation_kind IN (
+      'git.identity', 'git.head', 'git.branch', 'git.detached',
+      'git.dirty', 'git.remotes', 'git.upstream', 'git.ahead-behind'
+    )
+    ORDER BY event_id
+  `).all() as Array<{ observation_kind: string; source_version: string | null }>;
+  expect(Object.fromEntries(sourceVersions.map((row) => [row.observation_kind, row.source_version]))).toEqual({
+    "git.identity": null,
+    "git.head": immutableHead,
+    "git.branch": null,
+    "git.detached": null,
+    "git.dirty": null,
+    "git.remotes": null,
+    "git.upstream": null,
+    "git.ahead-behind": null,
+  });
   await writeFile(path.join(repo, "untracked.txt"), "dirty\n", "utf8");
   await api.refreshWorkspaceRepositories(store, workspace.id, { checkedAt: "2026-09-03T09:11:00.000Z" });
   const latestDirty = store.db.prepare(`
