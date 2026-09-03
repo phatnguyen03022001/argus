@@ -1,13 +1,13 @@
 protocol_version: 3
 
 task_id: TASK-0002
-task_revision: 1
+task_revision: 2
 state: APPROVED
 
 origin:
-  type: user_request
-  task_id: ""
-  gap_id: "PHASE2_LOCAL_WORKSPACE_FOUNDATION"
+  type: discovered_gap
+  task_id: TASK-0002
+  gap_id: "REPORT_PUBLICATION_CAPABILITY_RECOVERY"
 
 architect_binding:
   target_repository: phatnguyen03022001/argus
@@ -29,16 +29,13 @@ skill_library:
 
 architect_analysis_skills:
   - architect
-  - reuse-first
   - simplicity
 
 execution_skills:
   required:
     - executor
-    - simplicity
     - verification
-  recommended:
-    - security-review
+  recommended: []
 
 external_skills:
   architect_analysis: []
@@ -46,140 +43,104 @@ external_skills:
   execution_recommended: []
 
 authority_sources:
-  - source: "phatnguyen03022001/argus@c1ef12dd75eedb5a31c7ad75d65f92d9403d2800"
-    role: "Accepted Phase 0/1 foundation vision, ownership, data, interface, quality, delivery, and Vision Lock authority for Phase 2."
+  - source: "phatnguyen03022001/argus@7b527edc3f9a154b18378e2e473faf6aa2c369d7"
+    role: "Immutable TASK-0002 revision-1 Phase 2 implementation candidate whose product/runtime bytes must be preserved exactly during evidence recovery."
     precedence: 1
-  - source: "phatnguyen03022001/agent-skills@76f2d3877d1698f91eb5a6117e2301ed49480379"
-    role: "Released protocol-v3 Executor, simplicity, verification, and GitHub workflow authority."
+  - source: "phatnguyen03022001/argus@1621001c1245ff7f82e79409e529c3a996fab323"
+    role: "Original TASK-0002 revision-1 execution authority and authorized implementation base."
     precedence: 2
+  - source: "phatnguyen03022001/agent-skills@76f2d3877d1698f91eb5a6117e2301ed49480379"
+    role: "Released protocol-v3 execution, evidence, simplicity, and verification authority."
+    precedence: 3
 
 structure_authority:
   status: RESOLVED
-  source: "Argus Vision Lock at c1ef12dd75eedb5a31c7ad75d65f92d9403d2800 plus TASK-0002 revision 1."
+  source: "TASK-0002 revision 2 report-recovery authority over immutable candidate 7b527edc3f9a154b18378e2e473faf6aa2c369d7."
   rationale: >-
-    Phase 2 introduces the first runtime implementation. Use one repository-root, single-package local
-    TypeScript web application and the shallowest conventional Next.js structure. New source/config/migration
-    files needed by that one application are authorized. Do not create a monorepo, apps/packages split,
-    generic core/application/infrastructure layer hierarchy, plugin registry, daemon, worker, service split,
-    reusable SDK, or Phase 3+ ownership area.
+    Revision 1 completed and published the Phase 2 implementation but its Executor binding terminated
+    when report publication capability became unavailable. Revision 2 authorizes evidence recovery only.
+    No product/runtime/source/dependency/documentation implementation may change. The only new repository
+    file authorized for Executor publication is .agent/tasks/TASK-0002/report.yaml.
 
 objective: >-
-  Implement the smallest usable Argus Phase 2 local workspace foundation: one local-only UI/runtime,
-  durable Argus-owned workspace metadata with stable identity and migration/recovery semantics, a bounded
-  audit trail, and one repository-owned verifier. The operator must be able to start Argus locally, add an
-  existing filesystem workspace root, restart Argus, and still see that same workspace identity. Stop before
-  Git repository discovery/control or any Phase 3+ behavior.
+  Recover durable canonical Executor evidence for the already-published TASK-0002 Phase 2 implementation
+  candidate 7b527edc3f9a154b18378e2e473faf6aa2c369d7 without changing that implementation. Independently
+  re-verify the immutable candidate and current repository state, publish one truthful TASK-0002 revision-2
+  report, and stop at NEEDS_REVIEW.
 
 scope:
   required_changes:
     - >-
-      Establish exactly one local application stack: Node.js 24 LTS, TypeScript, pnpm 11, Next.js 16.3.3
-      App Router with its compatible stable React peer line, and Vitest 4.1.x for deterministic tests.
-      Pin concrete dependency versions in the lockfile/package metadata. Do not add another web/backend
-      framework, desktop wrapper, ORM, DI framework, state-management framework, styling framework, or test runner.
+      Fresh-resolve GitHub main, the original revision-1 task blob 5e9dcd485ca8d14ba86bee2509a89779e21a60db
+      at candidate history, candidate parent 1621001c1245ff7f82e79409e529c3a996fab323, candidate tree,
+      current revision-2 task/base identity, MAIN_ONLY topology, and clean synchronized local execution copy
+      before any Executor mutation.
     - >-
-      Use SQLite as the local durable store through better-sqlite3 13.0.3 with direct project-owned SQL and
-      migrations; do not add an ORM or remote/libSQL database. Store runtime data outside the Git repository
-      under the conventional macOS Application Support location for Argus. Tests may inject an isolated
-      temporary data root without changing production ownership semantics.
+      Treat 7b527edc3f9a154b18378e2e473faf6aa2c369d7 as immutable existing Phase 2 implementation evidence.
+      Do not amend, rebuild into a new implementation commit, reformat, or otherwise modify its product bytes.
     - >-
-      Implement schema-versioned local persistence and an explicit migration runner sufficient for the initial
-      schema and future forward migrations. A migration failure must not silently mark the target schema active.
-      The store must be reopenable deterministically and reject unsupported/invalid schema state rather than
-      pretending success.
+      Re-run sufficient deterministic evidence on the unchanged Phase 2 code to make the recovered report
+      self-sufficient across sessions: frozen-lockfile installation, repository-owned pnpm verify, focused
+      workspace/persistence/migration/export-restore/audit/UI evidence, and bounded loopback runtime smoke.
+      Tests may use isolated temporary data/workspace roots and must satisfy the existing local-hygiene contract.
     - >-
-      Implement the Phase 2 app-native workspace record with an immutable Argus-issued record identity,
-      operator-visible label, canonicalized/realpath filesystem root as mutable metadata, lifecycle timestamps,
-      and active/archived lifecycle semantics if removal is needed. Filesystem path must never become the record
-      primary identity. Prevent duplicate active records for the same canonical filesystem root.
+      Re-inspect the original base-to-candidate diff and dependency closure to prove the revision-1 Phase 2
+      acceptance boundary remains satisfied: one local Next.js/TypeScript application, durable workspace
+      metadata, migrations/recovery/audit/UI, loopback-only operation, and no Git/GitHub runtime control,
+      secrets/provider/task/business/Phase 3+ behavior, forbidden framework, runtime database leakage, or
+      unrelated external mutation.
     - >-
-      Validate workspace roots before persistence: the input must resolve to an absolute existing directory.
-      Resolve symlinks/relative forms to canonical realpath for comparison, report validation failures clearly,
-      and never scan, reset, modify, delete, or initialize the selected directory in Phase 2.
+      Publish exactly one new .agent/tasks/TASK-0002/report.yaml as Executor-owned evidence. The report must
+      clearly distinguish the immutable Phase 2 implementation candidate from this revision-2 evidence-recovery
+      execution. Its execution.final_execution_head is the revision-2 handoff base because revision 2 performs
+      no implementation mutation; acceptance evidence must separately bind the preserved implementation candidate
+      7b527edc3f9a154b18378e2e473faf6aa2c369d7 and original base.
     - >-
-      Implement a bounded APP_NATIVE_TRUTH audit journal for operator-significant workspace mutations and data
-      recovery operations. Records must include time, actor category, operation, deterministic target identity,
-      outcome/reason and relevant pre/post record identity/version when applicable. The audit shape must contain
-      no secret-value field and must not duplicate external truth.
-    - >-
-      Implement a minimal versioned export/restore capability for the Phase 2 Argus-owned state sufficient to
-      recover workspace records, audit evidence, and schema/integrity metadata. Restore must validate version,
-      identities and relationships before activation; invalid restore input must leave the current valid store
-      untouched. No cloud/off-device backup or background backup scheduler is authorized.
-    - >-
-      Provide a minimal local UI that is immediately usable: an Argus shell/home surface that lists configured
-      workspace roots and allows the operator to add an existing workspace root. Surface empty state and
-      validation errors clearly. This task does not require visual-polish redesign, command palette, global
-      search, repository cards, Git health, environment/provider/task/client surfaces, or analytics.
-    - >-
-      Bind the application server to loopback only for normal local operation. It must not intentionally listen
-      on all interfaces, expose a remote/cloud control plane, add authentication/multi-user semantics, or create
-      an always-on daemon/autostart service.
-    - >-
-      Keep application capability semantics transport-independent inside the implementation: UI/server transport
-      mechanics must not become the workspace domain contract. Use direct narrow modules for the concrete
-      responsibilities actually present (workspace state, persistence/recovery, audit) rather than speculative
-      adapter/factory/registry layers.
-    - >-
-      Add concise README local-run instructions and one repository-owned `pnpm verify` path covering static/type
-      checks, deterministic tests and production build. Keep developer setup local and secret-free; no `.env`
-      file or secret configuration is required for Phase 2.
-    - >-
-      Publish one bounded implementation commit and one canonical TASK-0002 report-only direct child on main,
-      preserve MAIN_ONLY topology exactly {main}, and stop at NEEDS_REVIEW.
+      Commit and push exactly one report-only direct child of the revision-2 handoff base, re-resolve remote main,
+      report parent/diff, task/report identity and topology exactly {main}, then stop at NEEDS_REVIEW.
   allowed_existing_files_or_components:
+    - .agent/tasks/TASK-0002/task.yaml
+    - package.json
+    - pnpm-lock.yaml
     - README.md
-    - docs/PRODUCT.md
-    - docs/BEHAVIOR.md
-    - docs/ARCHITECTURE.md
-    - docs/DATA.md
-    - docs/INTERFACES.md
-    - docs/QUALITY.md
-    - docs/DELIVERY.md
-    - docs/DECISIONS.md
-  expected_files_are_restrictive: false
+    - app
+    - src
+    - tests
+  expected_files_are_restrictive: true
 
 invariants:
-  - "GitHub remote main remains canonical repository truth; local /Users/tienphat/Developer/argus is an execution copy."
-  - "Argus remains one local process/deployable in Phase 2; no service split, daemon, worker, queue, cloud control plane, or monorepo is introduced."
-  - "Workspace record identity is immutable and independent from filesystem path/display label; path changes never manufacture a new identity implicitly."
-  - "Phase 2 may persist only Argus-owned workspace/audit/recovery state plus implementation metadata; it does not persist Git/provider/task observations yet."
-  - "Runtime SQLite data and exports are not stored in or committed to the Argus repository."
-  - "No secret value is required, stored, logged, exported, restored, or exposed by Phase 2."
-  - "Invalid/missing workspace paths, duplicate active roots, schema mismatch, migration failure, or invalid restore fail closed without corrupting current valid state."
-  - "The UI is a local adapter over the same workspace semantics; UI framework mechanics do not become domain authority."
-  - "Phase 2 performs no Git repository discovery, Git command execution, remote GitHub observation, environment/secret integration, provider integration, task projection, agent execution, or business workflow."
-  - "No Phase 3+ feature may be added merely because the selected stack makes it easy."
+  - "The immutable Phase 2 implementation candidate remains exactly 7b527edc3f9a154b18378e2e473faf6aa2c369d7 with original parent 1621001c1245ff7f82e79409e529c3a996fab323."
+  - "Revision 2 is evidence recovery only and authorizes zero product/runtime/source/dependency/documentation implementation changes."
+  - "GitHub remote main remains canonical repository truth and topology remains exactly {main}."
+  - "The recovered report must not pretend revision 2 produced a new implementation candidate."
+  - "All Phase 2 product acceptance claims must be supported by fresh evidence against code bytes identical to the immutable candidate."
+  - "No secret, runtime database/export, temporary test artifact, branch, tag, release, CI workflow, or external-repository mutation may be persisted."
 
 forbidden_changes:
-  - "Do not create dev, staging, feature, temporary, backup, or review branches."
-  - "Do not mutate TASK-0001 artifacts or rewrite accepted Phase 0/1 semantics."
-  - "Do not add Tauri/Electron/native desktop packaging, NestJS/Express/Fastify or another backend, an ORM, libSQL/Turso, PostgreSQL, Redis, queue/worker, Docker/Compose, MCP server, agent framework, provider SDK, or cloud deployment configuration."
-  - "Do not add Tailwind, component libraries, global client-state libraries, DI containers, generic plugin/adapter registries, or clean-architecture layer scaffolding for hypothetical future consumers."
-  - "Do not recursively discover repositories or execute Git/GitHub commands from the Argus runtime in this task."
-  - "Do not read or migrate existing .env files, access macOS Keychain, or implement environment/provider functionality."
-  - "Do not write into selected workspace roots; Phase 2 only validates and records the root metadata."
-  - "Do not implement command palette/search, task/authority projection, Agent Runtime/Codex integration, SF/client/opportunity/requirement flows, controlled external mutation, analytics, templates, or Phase 3+ functionality."
-  - "Do not add CI/GitHub Actions or release/tag/repository-metadata automation."
-  - "Do not mutate architect-profile, agent-skills, agent-documents, agent-standards, agent-runtime, SF, or any external repository."
+  - "Do not modify any product/runtime/source/test/dependency/docs/README bytes relative to candidate 7b527edc3f9a154b18378e2e473faf6aa2c369d7."
+  - "Do not amend or replace the existing implementation commit."
+  - "Do not create another implementation commit, branch, tag, release, workflow, deployment, or external repository mutation."
+  - "Do not implement Phase 3+ behavior."
+  - "Do not create review.yaml; Architect owns review after the recovered report is published."
 
 gap_policy:
-  local_auto_fix: true
+  local_auto_fix: false
   scope_expansion: forbidden
-  architecture_change: revised_contract_required
-  spec_change: revised_contract_required
-  dependency_change: revised_contract_required
-  public_contract_change: revised_contract_required
-  blocking_gap_behavior: AUTHORITY_REQUIRED
+  architecture_change: forbidden
+  spec_change: forbidden
+  dependency_change: forbidden
+  public_contract_change: forbidden
+  blocking_gap_behavior: BLOCKED
 
 structure_policy:
-  expected_new_files: []
+  expected_new_files:
+    - .agent/tasks/TASK-0002/report.yaml
   unlisted_new_files:
-    allowed: true
-    max: -1
+    allowed: false
+    max: 0
     within: []
-    purpose: "Executor-local files inside the single authorized Phase 2 Next.js/runtime, workspace, persistence/recovery, audit, UI, test, and migration boundary."
-  allow_new_top_level_directories: true
+    purpose: ""
+  allow_new_top_level_directories: false
   allow_new_shared_modules: false
 
 continuation_policy:
@@ -200,71 +161,47 @@ capability_requirements:
     - repository_content_write
     - native_local_execution
     - package_install
-    - filesystem_test_fixture_execution
     - test_execution
     - production_build_execution
     - loopback_runtime_smoke
+    - exact_diff_inspection
 
 acceptance_criteria:
   - id: AC-1
-    requirement: "The Phase 2 runtime is one reproducible local TypeScript/Next.js application using the authorized dependency boundary only."
-    evidence_required: "Pinned package/lock/runtime metadata show Node 24 LTS, pnpm 11, Next.js 16.3.3, compatible React peers, better-sqlite3 13.0.3 and Vitest 4.1.x; no forbidden framework/dependency/topology appears."
+    requirement: "The original TASK-0002 Phase 2 implementation identity and lineage are preserved exactly."
+    evidence_required: "GitHub and local Git prove candidate 7b527edc3f9a154b18378e2e473faf6aa2c369d7 has parent 1621001c1245ff7f82e79409e529c3a996fab323, unchanged tree identity, and original revision-1 task blob 5e9dcd485ca8d14ba86bee2509a89779e21a60db in its history."
   - id: AC-2
-    requirement: "Argus starts as a loopback-only local application and renders a usable workspace home surface."
-    evidence_required: "Fresh production/dev smoke proves the app responds on 127.0.0.1, the home UI renders configured/empty workspace state, and normal startup does not intentionally bind a wildcard external interface."
+    requirement: "The immutable Phase 2 candidate still satisfies the original runtime and verification boundary."
+    evidence_required: "Fresh frozen-lockfile install, pnpm verify, focused persistence/migration/recovery/audit/UI checks and loopback smoke PASS against code bytes identical to candidate; exact diff/dependency inspection finds no forbidden Phase 3+ or secret/external-mutation behavior."
   - id: AC-3
-    requirement: "Workspace identity and path semantics preserve the frozen deterministic-identity boundary."
-    evidence_required: "Tests prove immutable Argus-issued workspace ID, canonical realpath metadata, duplicate-root rejection, invalid/non-directory rejection, and identity preservation when mutable metadata changes."
+    requirement: "Revision-2 recovery mutates only canonical Executor evidence."
+    evidence_required: "Revision-2 pre-report diff from candidate contains only Architect-owned task.yaml; Executor adds only .agent/tasks/TASK-0002/report.yaml, with no implementation/dependency/docs change."
   - id: AC-4
-    requirement: "Workspace state is durable outside the repository and survives application/store reopen."
-    evidence_required: "Integration evidence using an isolated data root creates a workspace, closes/reopens the store/process boundary, and resolves the same record identity and metadata; repository diff contains no runtime database."
+    requirement: "Recovered report is truthful and reconstructible."
+    evidence_required: "Report revision 1 binds TASK-0002 revision 2 and current recovery handoff base, explicitly identifies preserved Phase 2 candidate/original base in evidence, records all checks without inventing prior session-only claims, and stops at NEEDS_REVIEW."
   - id: AC-5
-    requirement: "Schema versioning and migration failure semantics are deterministic and fail closed."
-    evidence_required: "Tests cover initial migration, known-version reopen, unsupported schema rejection, and a failing migration/recovery fixture proving invalid target schema is not activated over the prior valid state."
-  - id: AC-6
-    requirement: "Phase 2 app-native export/restore is versioned, validated and non-destructive on invalid input."
-    evidence_required: "Round-trip tests export workspace/audit/schema state, restore into an isolated store and prove identities/relationships; malformed or unsupported restore is rejected while the prior valid store remains readable."
-  - id: AC-7
-    requirement: "Workspace mutations produce bounded secret-free audit evidence."
-    evidence_required: "Tests prove successful and rejected material workspace/recovery operations record required identity/time/outcome/reason semantics without secret-value payload fields."
-  - id: AC-8
-    requirement: "The UI can add and list an existing workspace without mutating the selected directory."
-    evidence_required: "Focused application/UI evidence proves a valid temporary directory can be submitted and then rendered from persisted state, while invalid/duplicate input yields a clear failure and selected workspace contents remain unchanged."
-  - id: AC-9
-    requirement: "Phase 2 remains strictly before Git/repository control."
-    evidence_required: "Exact source/diff inspection proves no runtime Git/GitHub discovery or command execution, no repository health model, and no Phase 3+ feature/dependency was introduced."
-  - id: AC-10
-    requirement: "The repository has one deterministic local verification path."
-    evidence_required: "Fresh `pnpm install --frozen-lockfile` and `pnpm verify` succeed on the exact implementation SHA; verification includes type/static checks, deterministic tests, and production build."
-  - id: AC-11
-    requirement: "Execution lineage and repository topology remain exact."
-    evidence_required: "Implementation is a direct child of the authorized base, report is a report-only direct child, final remote topology is exactly {main}, and no branch/tag/release/CI/external-repository mutation occurred."
+    requirement: "Final Git lineage and hygiene are exact."
+    evidence_required: "Report commit is the sole direct child of revision-2 handoff base, its only diff is report.yaml, final local/remote main match, topology is exactly {main}, working tree is clean, and no branch/tag/release/CI/external-repository mutation occurred."
 
 verification:
   executor_checks:
     - id: CHECK-1
-      command_or_check: "Preflight exact task/base/pinned authority, remote main identity, clean local execution copy, Node/package/native-build capability, and MAIN_ONLY topology before mutation."
+      command_or_check: "Fresh-preflight exact revision-2 handoff/base/task identity, candidate/original-base lineage, original revision-1 task blob, MAIN_ONLY topology, clean synchronized local state, and all current EXECUTION capabilities before mutation."
       required: true
     - id: CHECK-2
-      command_or_check: "Install exactly from the committed lockfile and inspect dependency closure for forbidden or unexpected runtime/framework additions."
+      command_or_check: "Run pnpm install --frozen-lockfile and fresh pnpm verify without changing committed dependency or source bytes."
       required: true
     - id: CHECK-3
-      command_or_check: "Run focused deterministic workspace identity/path validation, persistence reopen, schema migration failure, export/restore, and audit tests against isolated temporary data/workspace roots."
+      command_or_check: "Run focused Phase 2 persistence/reopen, migration failure, export/restore, audit and UI add/list/validation evidence against isolated temporary roots; prove local-hygiene cleanup."
       required: true
     - id: CHECK-4
-      command_or_check: "Run focused UI/application smoke proving valid add/list plus invalid/duplicate handling without modifying selected workspace contents."
+      command_or_check: "Run bounded production loopback smoke on 127.0.0.1 and cleanly terminate the process and run-owned temporary state."
       required: true
     - id: CHECK-5
-      command_or_check: "Run the repository-owned `pnpm verify` on the exact implementation candidate and require all included static/type/test/build gates PASS with no skips."
+      command_or_check: "Inspect original base-to-candidate and candidate-to-revision-2-base diffs plus dependencies for candidate immutability, forbidden features/material, runtime DB/export leakage, and any Phase 3+ behavior."
       required: true
     - id: CHECK-6
-      command_or_check: "Start the exact candidate locally and prove loopback response on 127.0.0.1 plus clean bounded process shutdown; do not create an autostart/daemon."
-      required: true
-    - id: CHECK-7
-      command_or_check: "Inspect exact base-to-implementation diff for runtime DB/export leakage, .env/secret material, runtime Git/GitHub execution, forbidden dependencies/topology, Phase 3+ behavior, README accuracy, and unauthorized docs/task changes."
-      required: true
-    - id: CHECK-8
-      command_or_check: "Publish one implementation commit plus one report-only direct child, then re-resolve final remote main, task/report identity and topology exactly {main} before NEEDS_REVIEW."
+      command_or_check: "Create only report.yaml, verify exact staged diff, commit/push one report-only child, then re-resolve final remote main, report parent/diff, exact task/report identity, clean local state and topology {main}."
       required: true
   authoritative_verification:
     required: false
