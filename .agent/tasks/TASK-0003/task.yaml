@@ -1,0 +1,296 @@
+protocol_version: 3
+
+task_id: TASK-0003
+task_revision: 1
+state: APPROVED
+
+origin:
+  type: user_request
+  task_id: ""
+  gap_id: "PHASE3_REPOSITORY_OBSERVATION_SLICE"
+
+architect_binding:
+  target_repository: phatnguyen03022001/argus
+
+target:
+  repository: phatnguyen03022001/argus
+  branch:
+    name: main
+    role: canonical
+
+execution_base:
+  mode: handoff_snapshot
+  capture: after_final_planning_commit
+  require_exact_match: true
+
+skill_library:
+  repository: phatnguyen03022001/agent-skills
+  revision: "76f2d3877d1698f91eb5a6117e2301ed49480379"
+
+architect_analysis_skills:
+  - architect
+  - reuse-first
+  - simplicity
+
+execution_skills:
+  required:
+    - executor
+    - simplicity
+    - verification
+  recommended:
+    - security-review
+
+external_skills:
+  architect_analysis: []
+  execution_required: []
+  execution_recommended: []
+
+authority_sources:
+  - source: "phatnguyen03022001/argus@ae1ca6a506b46c6e0914182f32d4a52bf78d1341"
+    role: "Accepted Phase 0/1 Vision Lock plus accepted Phase 2 local workspace foundation and its canonical review lineage."
+    precedence: 1
+  - source: "phatnguyen03022001/agent-skills@76f2d3877d1698f91eb5a6117e2301ed49480379"
+    role: "Released protocol-v3 execution, reuse-first, simplicity, verification, and Git/GitHub workflow authority."
+    precedence: 2
+
+structure_authority:
+  status: RESOLVED
+  source: "Argus accepted foundation through TASK-0002 plus TASK-0003 revision 1."
+  rationale: >-
+    Extend the existing single-package Next.js/local SQLite application with one bounded Phase 3 repository
+    observation slice. Reuse the system Git and GitHub CLI capabilities behind narrow project-owned process
+    boundaries; add no Git/GitHub npm SDK, service split, generic plugin registry, background worker, queue,
+    daemon, or Phase 4+ module hierarchy. Source structure remains shallow and responsibility-oriented.
+
+objective: >-
+  Implement the first Phase 3 Git/repository-control slice as read-only repository discovery and evidence-bearing
+  Git observation. From configured Phase 2 workspace roots, Argus must discover local Git repositories/worktrees,
+  resolve deterministic repository identity when GitHub evidence is available, observe local Git state and live
+  GitHub canonical ref state without mutating discovered repositories, persist last-known provenance-bearing
+  observations, and expose those facts in the local UI. Derived health/attention and Git mutation/sync actions are
+  deliberately deferred to later Phase 3 tasks.
+
+scope:
+  required_changes:
+    - >-
+      Discover Git repositories and linked worktrees reachable beneath configured active workspace roots using a
+      bounded filesystem traversal that is safe against symlink cycles and does not descend into Git internals,
+      dependency/build output, Argus runtime data, or another already-recognized repository working tree merely to
+      find nested implementation directories. Ordinary non-Git directories remain ordinary workspace contents and
+      must not be initialized, modified, or misclassified as repositories.
+    - >-
+      Recognize normal Git working trees and linked worktrees where `.git` is a file as well as a directory. Bare
+      repositories may be represented as unsupported/observed when encountered but are not required to become
+      Phase 3 controllable workspaces. Preserve the distinction between local worktree identity/path and canonical
+      repository identity.
+    - >-
+      Use the existing system `git` executable as the local-Git observation mechanism. Only read-only inspection is
+      authorized in TASK-0003: repository/worktree/common-dir identity, full HEAD SHA, symbolic branch or detached
+      state, porcelain dirty state, configured remotes/upstream, and read-only ahead/behind evidence where locally
+      provable. Do not invoke fetch, pull, merge, rebase, checkout/switch, reset, clean, stash, add, commit, push,
+      remote mutation, gc, prune, worktree add/remove, config writes, hooks, or any command that intentionally
+      mutates a discovered repository.
+    - >-
+      For a GitHub-hosted remote, normalize common HTTPS/SSH GitHub remote URL forms to owner/repository alias and
+      use the already-installed/authenticated system `gh` CLI as the preferred live GitHub observation capability.
+      Resolve the provider-issued immutable GitHub repository identity plus canonical name/default branch and the
+      current remote ref SHA needed to compare the observed local branch/default branch. GitHub/gh unavailability,
+      missing authentication, unsupported/non-GitHub remotes, deleted repositories, or inaccessible refs must be
+      represented as explicit unavailable/unknown evidence rather than converted to healthy/current data.
+    - >-
+      Do not store or request a GitHub token in Argus. The `gh` subprocess owns its existing authentication
+      mechanics; Argus receives only normalized non-secret command results/status. No credential value may enter
+      SQLite, application logs, UI payloads, audit records, fixtures, exports, or repository artifacts.
+    - >-
+      Add the first EXTERNAL_DERIVED_TRUTH observation persistence needed for repository/Git facts. Every material
+      persisted observation must bind a stable observation ID, canonical source identity, canonical subject identity
+      when known, observation kind/value or explicit absence, observed_at, availability, freshness, source version
+      evidence when available, and provenance sufficient to identify the Git/gh capability that produced it.
+      Existing APP_NATIVE_TRUTH workspace/audit/recovery ownership must remain separate.
+    - >-
+      Use an explicit on-demand refresh freshness policy for this Phase 3 slice: facts acquired successfully in the
+      current scan/refresh are CURRENT for that result; when a later refresh cannot re-observe an external source,
+      retained last-known external values remain visible but are STALE or freshness-UNKNOWN with current availability
+      UNAVAILABLE/UNKNOWN. Argus must not run a background poller or pretend an old persisted GitHub ref is CURRENT.
+    - >-
+      Reconciliation must compare only matching canonical source/subject/observation kinds, retain attributable
+      prior evidence, prefer stronger immutable GitHub/source identity/version evidence, and surface contradictory
+      evidence as CONFLICTED/explicit conflict evidence rather than silently overwriting it. Source failure must not
+      replace the last successful value with fabricated null/fresh data.
+    - >-
+      Persist enough repository-index linkage to reconnect a discovered local worktree path and its workspace to the
+      stronger immutable GitHub repository identity when available. A filesystem path, display name, remote URL,
+      owner/name alias, mutable branch name, or local tracking ref alone must never replace the stronger provider ID
+      as canonical repository identity once that stronger identity is known.
+    - >-
+      Extend the existing local UI minimally so an operator can trigger a workspace repository refresh and inspect
+      discovered repositories. For each observed repository show at least canonical/display identity, local path,
+      worktree/normal classification, current branch or detached state, local HEAD, dirty state, configured GitHub
+      alias/remote when available, live remote/default or relevant branch SHA when available, observation time, and
+      availability/freshness. Show explicit unavailable/unknown/conflict states rather than hiding the repository.
+    - >-
+      Do not derive the Phase 3 product health taxonomy (`HEALTHY`, `LOCAL_BEHIND`, `LOCAL_AHEAD`, `DIVERGED`, etc.)
+      in this task. Raw normalized observations and freshness/availability/conflict evidence are the authorized output;
+      deterministic repository health/attention projection is a separate next Phase 3 task.
+    - >-
+      Add deterministic tests using temporary Git repositories/worktrees and fake/injected process results for
+      GitHub CLI boundaries. Tests must cover normal repository discovery, linked worktree discovery, ordinary
+      directory rejection, symlink-cycle safety, clean/dirty/detached local observation, GitHub identity/ref
+      normalization, unavailable GitHub, stale last-known preservation, and no discovered-repository mutation.
+      Live GitHub may be used only as an additional bounded smoke against Argus itself, never as the sole contract proof.
+    - >-
+      Preserve the existing Node 24/pnpm/Next.js/SQLite stack and repository-owned `pnpm verify`; add no new runtime
+      dependency unless an acceptance criterion is impossible with the standard library, current dependencies,
+      system git, and system gh. Fresh `pnpm install --frozen-lockfile` plus `pnpm verify` must pass.
+    - >-
+      Publish one implementation commit and one canonical TASK-0003 report-only direct child on main, preserve
+      MAIN_ONLY topology exactly {main}, and stop at NEEDS_REVIEW.
+  allowed_existing_files_or_components:
+    - app
+    - src
+    - tests
+    - package.json
+    - pnpm-lock.yaml
+    - README.md
+  expected_files_are_restrictive: false
+
+invariants:
+  - "GitHub remote evidence remains canonical for GitHub-hosted repository refs/objects; Argus stores observations/indexes only."
+  - "Local Git/workspace state is operator-owned execution evidence and must never be reset, cleaned, stashed, checked out, fetched, pulled, committed, pushed, or otherwise mutated by TASK-0003."
+  - "Repository identity prefers provider-issued immutable GitHub identity when available; filesystem path and owner/name/URL remain aliases or local metadata."
+  - "Observation availability, freshness, conflict, local Git state, GitHub state, authority, capability, and future health remain distinct facts."
+  - "Every persisted external repository/Git fact has deterministic identity, provenance, observed_at, and explicit availability/freshness semantics."
+  - "Failed refresh preserves attributable last-known evidence but never presents it as freshly observed GitHub truth."
+  - "No secret value is requested from gh, persisted, logged, rendered, exported, or added to repository artifacts."
+  - "Repository discovery/observation must be bounded and must not recursively consume Git internals, dependency/build trees, symlink cycles, or nested directories inside an already-recognized repository working tree."
+  - "TASK-0003 exposes raw normalized repository/Git observations only; repository health/attention and mutation/sync actions remain unimplemented."
+  - "No Phase 4 environment/Keychain/provider-resource behavior, Phase 6 authority projection, agent execution, or business workflow is introduced."
+
+forbidden_changes:
+  - "Do not create dev, staging, feature, temporary, backup, or review branches."
+  - "Do not modify accepted TASK-0001/TASK-0002 task/report/review artifacts."
+  - "Do not invoke or implement Git fetch/pull/merge/rebase/checkout/switch/reset/clean/stash/add/commit/push/config-write/remote-write/gc/prune or worktree mutation against discovered operator repositories."
+  - "Do not add GitHub/octokit/isomorphic-git/simple-git or another Git/GitHub npm SDK when system git/gh plus narrow project-owned adapters satisfy the task."
+  - "Do not add background polling, filesystem watchers, cron/scheduler, queue/worker, daemon/autostart, plugin registry, generic orchestration, WebSocket/event bus, or cloud service."
+  - "Do not store GitHub credentials or implement Keychain/environment secret management."
+  - "Do not implement repository health/attention classification, safe-sync actions, remote mutation, task/authority projection, providers/resources, SF/client/business features, analytics, templates, or controlled mutations."
+  - "Do not add Docker/Compose, CI/GitHub Actions, Vercel/deployment configuration, release/tag automation, or mutate another repository."
+
+gap_policy:
+  local_auto_fix: true
+  scope_expansion: forbidden
+  architecture_change: revised_contract_required
+  spec_change: revised_contract_required
+  dependency_change: revised_contract_required
+  public_contract_change: revised_contract_required
+  blocking_gap_behavior: AUTHORITY_REQUIRED
+
+structure_policy:
+  expected_new_files: []
+  unlisted_new_files:
+    allowed: true
+    max: -1
+    within: []
+    purpose: "Executor-local files inside the existing single-package repository-discovery, Git/GitHub observation, observation persistence, UI, and test boundary."
+  allow_new_top_level_directories: false
+  allow_new_shared_modules: false
+
+continuation_policy:
+  mode: MANUAL
+  stop_conditions:
+    - BLOCKED
+    - STALE_STATE
+    - AUTHORITY_REQUIRED
+    - CURRENT_PHASE_CAPABILITY_UNAVAILABLE
+    - REVIEW_REQUIRED
+    - REVERIFY_REQUIRED
+    - USER_STOP
+
+capability_requirements:
+  EXECUTION:
+    - exact_remote_ref_read
+    - repository_content_read
+    - repository_content_write
+    - native_local_execution
+    - filesystem_test_fixture_execution
+    - git_read_observation
+    - github_cli_read_observation
+    - package_install
+    - test_execution
+    - production_build_execution
+    - loopback_runtime_smoke
+    - exact_diff_inspection
+
+acceptance_criteria:
+  - id: AC-1
+    requirement: "Configured workspace roots yield bounded deterministic discovery of local Git repositories and linked worktrees without mutating them."
+    evidence_required: "Fixture/integration tests prove normal repo + .git-file worktree discovery, ordinary directory rejection, nested-repository traversal stop, symlink-cycle safety, stable workspace/path linkage, and byte/ref/config invariance of discovered repositories after scan."
+  - id: AC-2
+    requirement: "Local Git observations expose the minimum raw evidence needed for later health derivation."
+    evidence_required: "Tests prove full HEAD SHA, symbolic branch/detached state, dirty status, configured remotes/upstream and read-only ahead/behind evidence where locally available, with explicit unknown states when not provable."
+  - id: AC-3
+    requirement: "GitHub-hosted repositories resolve stronger canonical source identity and live ref evidence without Argus-owned credentials."
+    evidence_required: "Normalized HTTPS/SSH GitHub remotes resolve via injected/fake gh contract to provider immutable repo ID, canonical alias/default branch and live ref SHA; missing gh/auth/repository/ref/non-GitHub remote returns explicit unavailable/unknown evidence and no credential value is captured."
+  - id: AC-4
+    requirement: "Persisted repository observations satisfy the frozen provenance/freshness model."
+    evidence_required: "SQLite migration/tests prove deterministic observation/source/subject identities, observed_at, value/absence, availability, CURRENT-on-success on-demand freshness, stale/unknown last-known preservation on failed later refresh, provenance/version evidence, and conflict preservation without APP_NATIVE_TRUTH ownership confusion."
+  - id: AC-5
+    requirement: "Repository identity remains stable across aliases and local paths."
+    evidence_required: "Tests prove two observations/paths that resolve the same immutable GitHub repo identity link to that canonical repository without making path, URL, display name, branch or owner/name alias the primary identity; stronger identity adoption does not destroy prior provenance."
+  - id: AC-6
+    requirement: "The local UI exposes inspectable raw repository/Git evidence rather than a misleading health score."
+    evidence_required: "Application/UI tests and bounded smoke prove workspace refresh plus repository listing shows local identity/path/type/branch/HEAD/dirty and GitHub/ref observation time/freshness/availability when available, while unavailable/unknown/conflict remains visible and no HEALTHY/BEHIND/AHEAD/DIVERGED projection is introduced."
+  - id: AC-7
+    requirement: "Repository observation is operationally read-only."
+    evidence_required: "Command-boundary tests reject non-allowlisted mutating Git/gh operations; fixture snapshots before/after prove HEAD, refs, index, config, worktree files and remotes unchanged; exact source inspection finds no runtime mutation command path."
+  - id: AC-8
+    requirement: "Phase 3 slice preserves stack simplicity and verification quality."
+    evidence_required: "No unnecessary runtime dependency/service/framework is introduced; fresh frozen-lockfile install and repository-owned pnpm verify PASS, plus bounded loopback smoke on 127.0.0.1."
+  - id: AC-9
+    requirement: "Execution lineage stays exact and Phase 3 scope does not leak forward."
+    evidence_required: "Base-to-implementation diff contains only authorized repository-observation/UI/persistence/test/README changes, report is a report-only direct child, final topology is {main}, and no health/sync/environment/provider/task/agent/business/deployment behavior or external-repository mutation appears."
+
+verification:
+  executor_checks:
+    - id: CHECK-1
+      command_or_check: "Fresh-preflight exact TASK-0003/base/pinned authority, accepted TASK-0002 review, MAIN_ONLY topology, clean local execution copy, system git/gh read capability, package/test/build/runtime capability before mutation."
+      required: true
+    - id: CHECK-2
+      command_or_check: "Build isolated temporary repository fixtures including ordinary dirs, normal repos, linked worktrees, dirty/detached states, nested-stop cases and symlink-cycle cases; snapshot HEAD/refs/index/config/files/remotes before observation and prove unchanged afterward."
+      required: true
+    - id: CHECK-3
+      command_or_check: "Run deterministic fake/injected GitHub CLI contract tests covering stable repo identity, HTTPS/SSH alias normalization, default/relevant ref SHA, inaccessible/missing gh/auth/non-GitHub cases, and secret-free normalized results."
+      required: true
+    - id: CHECK-4
+      command_or_check: "Run persistence/reconciliation tests for successful CURRENT observations followed by unavailable refresh retaining last-known STALE/UNKNOWN evidence, conflict preservation, stronger identity adoption and cache/reopen behavior."
+      required: true
+    - id: CHECK-5
+      command_or_check: "Run UI/application tests for workspace repository refresh/listing and explicit unavailable/unknown/conflict rendering without repository-health classification."
+      required: true
+    - id: CHECK-6
+      command_or_check: "Run fresh pnpm install --frozen-lockfile and pnpm verify with all type/test/build gates PASS, then bounded 127.0.0.1 runtime smoke using only run-owned temporary Argus data."
+      required: true
+    - id: CHECK-7
+      command_or_check: "Inspect exact diff/source/dependencies for discovered-repository mutation commands, credential capture/logging, unnecessary SDK/dependency, runtime artifact leakage, background poller/watcher, health/sync/Phase4+ scope, and unauthorized artifact changes."
+      required: true
+    - id: CHECK-8
+      command_or_check: "Publish exactly one implementation commit and one report-only direct child; re-resolve remote main, report parent/diff, task/report identities, clean local state, zero unauthorized branches/tags and topology exactly {main} before NEEDS_REVIEW."
+      required: true
+  authoritative_verification:
+    required: false
+    mechanism: ""
+    expected_signal: ""
+
+git_authority:
+  create_branch: false
+  commit: true
+  push: true
+  promote_to_main: false
+
+release_authority:
+  create_version_tag: false
+  mutate_repository_metadata: false
+  publish_release: false
+
+blocking_decisions: []
+execution_ready: true
