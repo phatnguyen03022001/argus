@@ -1,0 +1,383 @@
+protocol_version: 3
+
+task_id: TASK-0001
+task_revision: 1
+state: APPROVED
+
+origin:
+  type: user_request
+  task_id: ""
+  gap_id: "ARGUS_FOUNDATION_DESIGN_CLOSURE"
+
+architect_binding:
+  target_repository: phatnguyen03022001/argus
+
+target:
+  repository: phatnguyen03022001/argus
+  branch:
+    name: main
+    role: canonical
+
+execution_base:
+  mode: handoff_snapshot
+  capture: after_final_planning_commit
+  require_exact_match: true
+
+skill_library:
+  repository: phatnguyen03022001/agent-skills
+  revision: "76f2d3877d1698f91eb5a6117e2301ed49480379"
+
+architect_analysis_skills:
+  - architect
+  - github-workflow
+  - simplicity
+
+execution_skills:
+  required:
+    - executor
+    - gap-analysis
+    - design-review
+    - simplicity
+    - verification
+  recommended:
+    - security-review
+
+external_skills:
+  architect_analysis: []
+  execution_required: []
+  execution_recommended: []
+
+authority_sources:
+  - source: "phatnguyen03022001/argus@6581a97a80e65a11244d936c81af05b276e2a7f3"
+    role: "Target-authoritative repository bootstrap baseline establishing MAIN_ONLY topology on main and prohibiting runtime implementation before foundation closure."
+    precedence: 1
+  - source: "phatnguyen03022001/agent-documents@6918f46282f4a92bbc61071444a5ff5dab30ddc9"
+    role: "Released v1.0.0 documentation ownership, catalog, coverage, and milestone-closure authority."
+    precedence: 2
+  - source: "phatnguyen03022001/agent-skills@76f2d3877d1698f91eb5a6117e2301ed49480379"
+    role: "Released v1.0.0 protocol-v3 execution, GitHub workflow, simplicity, verification, and review semantics."
+    precedence: 3
+
+structure_authority:
+  status: RESOLVED
+  source: "TASK-0001 revision 1 plus agent-documents v1.0.0 default small-project authority-domain model."
+  rationale: >-
+    Phase 0/1 is documentation-only foundation closure. Use the eight canonical agent-documents
+    root authority domains plus one project catalog and the canonical task report. No runtime
+    source tree, dependency manifest, framework scaffold, provider SDK integration, documentation
+    shard, registry, generated program, or additional top-level structure is justified yet.
+
+objective: >-
+  Close Argus Phase 0 Reality baseline and Phase 1 Vision + ownership design so the repository has
+  one target-authoritative, internally consistent, implementation-driving foundation for the
+  Engineering MVP without selecting runtime implementation technology or implementing product
+  behavior. Freeze the product boundary, truth ownership, identity/reconciliation semantics,
+  durability/security/mutation/testing boundaries, Engineering MVP scope, non-goals, and agreed
+  milestone program, then stop at NEEDS_REVIEW.
+
+scope:
+  required_changes:
+    - >-
+      Materialize the agent-documents v1.0.0 small-project authority model as docs/PRODUCT.md,
+      docs/BEHAVIOR.md, docs/ARCHITECTURE.md, docs/DATA.md, docs/INTERFACES.md, docs/QUALITY.md,
+      docs/DELIVERY.md, docs/DECISIONS.md, and docs/catalog/project.json. The Phase 0/1 milestone
+      must be closed-world and FROZEN only when its blocking design gaps reach zero.
+    - >-
+      Define Argus as an operator-local control plane/workspace that observes external engineering
+      and provider state, owns explicit Argus-native working records, keeps secrets outside ordinary
+      application data, and projects confirmed product truth back to the target repository instead
+      of becoming a second source of truth.
+    - >-
+      Define exactly four ownership/truth classes and their boundaries:
+      EXTERNAL_DERIVED_TRUTH for GitHub, target repositories, agent-* repositories, provider APIs,
+      local Git and other observed external state that Argus may observe/index/cache but does not
+      own; APP_NATIVE_TRUTH for durable Argus-owned records that require migration, backup/export,
+      restore and lifecycle semantics; SECRETS for secret material owned by macOS Keychain with
+      Argus storing references/metadata only; and CONFIRMED_PRODUCT_TRUTH for accepted product
+      decisions/requirements whose canonical destination is the relevant target repository.
+    - >-
+      Define deterministic identity rules for repositories, refs/commits, tasks/revisions,
+      workspaces, external resources, app-native records, observations and promoted requirements.
+      Prefer canonical source IDs and immutable SHAs where available; never use a display name,
+      mutable branch tip, or local path alone as identity when a stronger canonical identity exists.
+    - >-
+      Define the observation/reconciliation model for all derived state. Every material derived
+      observation must carry at least value, source, observed_at, identity, freshness, and explicit
+      availability/confidence semantics. Specify source-specific freshness evaluation, stale and
+      unavailable behavior, conflict/reconciliation precedence, and how later observations supersede
+      views without erasing provenance. Unknown/unavailable/stale must never be represented as fresh
+      healthy state.
+    - >-
+      Define derived health and attention semantics as deterministic views over current observations,
+      provenance, freshness, policy and explicit operator-owned state. Health/attention is not a new
+      external source of truth, must expose its reasons/inputs, and must not create an implicit task
+      queue or mutation authority.
+    - >-
+      Define offline semantics. Argus-native durable data and last-known observations remain readable
+      offline; external state must be visibly stale/unavailable according to its freshness policy;
+      operations that require live external preconditions must fail closed rather than fabricate
+      success. Do not introduce a durable offline external-mutation queue in the Engineering MVP.
+    - >-
+      Define APP_NATIVE_TRUTH durability requirements independent of storage engine/ORM: schema
+      versioning, forward migration discipline, backup/export, restore, restore validation,
+      corruption/failure handling, and enough lifecycle semantics that Argus-owned records can be
+      recovered without relying on external systems. Distinguish cached derived data from durable
+      app-native records so cache loss never destroys Argus-owned truth.
+    - >-
+      Define the secret boundary around macOS Keychain. Secret values, tokens and credentials must
+      not be persisted in ordinary app-native data, repository artifacts, logs, backups/exports or
+      audit payloads. Argus may persist only non-secret references and metadata needed to locate or
+      describe credentials. Secret availability never grants mutation authority.
+    - >-
+      Define the audit boundary for operator-significant Argus-native changes and controlled
+      mutation attempts/results. Audit evidence must retain deterministic target identity,
+      intent/authority reference, relevant pre/post identity, outcome and time while excluding
+      secret material. Audit data is evidence, not a replacement for GitHub, provider or target
+      repository truth.
+    - >-
+      Define a transport-independent semantic capability interface between Argus and execution
+      surfaces. Capabilities describe what can be done or observed; GitHub connectors, Agent Runtime,
+      local tools, future MCP transports, provider clients or other adapters are implementation
+      mechanisms and must not leak into the product-domain contract. Capability availability and
+      action authority remain separate.
+    - >-
+      Define the requirement-to-product promotion boundary. Opportunity/client/requirement working
+      state remains APP_NATIVE_TRUTH until explicitly accepted for a target product; accepted product
+      truth must be materialized in the target repository through a controlled, traceable promotion
+      with stable references, after which Argus must not act as the sole canonical owner of that
+      product decision.
+    - >-
+      Define the controlled mutation contract without implementing it. A mutation must bind exact
+      target identity, expected prior state/preconditions, authority, required capability, intended
+      change, bounded preview/diff where meaningful, execution outcome, postcondition verification
+      and audit evidence. Drift, missing authority, missing capability or unverifiable postcondition
+      fails closed. Broad destructive cleanup, force mutation and hidden autonomous side effects are
+      outside the foundation contract.
+    - >-
+      Define testing boundaries for future runtime work: deterministic tests for identity,
+      freshness/reconciliation and derived health; storage migration/backup/restore tests for
+      APP_NATIVE_TRUTH; contract tests for capability adapters; mutation safety/precondition tests
+      against fixtures/fakes; bounded integration tests for real boundaries; and no destructive
+      tests against operator production state. Do not create runtime tests in this task.
+    - >-
+      Freeze the Engineering MVP boundary as completion through Phase 5 only:
+      Phase 0 Reality baseline -> Phase 1 Vision + ownership closure -> VISION LOCK ->
+      Phase 2 Local workspace foundation -> Phase 3 Git / repo control ->
+      Phase 4 Environment + secrets -> Phase 5 Providers + resources -> ENGINEERING MVP.
+      The Engineering MVP must remain foundation/control-plane focused and must not absorb later
+      task projection, agent execution, business workflow, automation or analytics scope.
+    - >-
+      Persist the agreed full milestone program and boundaries exactly:
+      PHASE 0 Reality baseline;
+      PHASE 1 Vision + ownership closure;
+      VISION LOCK;
+      PHASE 2 Local workspace foundation;
+      PHASE 3 Git / repo control;
+      PHASE 4 Environment + secrets;
+      PHASE 5 Providers + resources;
+      ENGINEERING MVP;
+      PHASE 6 Authority + task projection;
+      PHASE 7 Agent execution + continuity;
+      ENGINEERING V1;
+      PHASE 8 SF opportunity/client workspace;
+      PHASE 9 Requirement/scope/commercial control;
+      PHASE 10 Client project -> engineering -> delivery;
+      BUSINESS V1;
+      PHASE 11 Templates + project onboarding;
+      PHASE 12 Controlled mutations/automation;
+      PHASE 13 Analytics + governance learning;
+      PHASE 14 Hardening.
+      Document dependencies and milestone intent only to the depth needed for sequencing; do not turn
+      the program into a runtime orchestrator or generated execution DAG.
+    - >-
+      Make non-goals explicit: no dev/staging branch; no runtime implementation; no UI framework,
+      Tauri, ORM, database engine, MCP transport, provider SDK or agent framework selection; no
+      cloud/multi-user control plane; no generic workflow engine/orchestrator/queue; no duplicated
+      GitHub/repository/provider SSOT; no secret-vault replacement; no autonomous destructive
+      mutation; no SF/business workflow implementation; no analytics implementation; and no
+      framework-shaped abstractions without current Phase 0/1 evidence.
+    - >-
+      Resolve all Phase 0/1 blocking DESIGN unknowns that can materially change correctness,
+      ownership, security, durability, interfaces or Engineering MVP scope. Implementation-local
+      technology choices intentionally deferred by this task may remain deferred only when their
+      boundary and decision timing are explicit and they do not block Phase 2.
+    - >-
+      Publish one bounded documentation implementation commit and one canonical TASK-0001 report-only
+      direct child, preserve topology exactly {main}, and stop at NEEDS_REVIEW. Do not execute any
+      later milestone.
+  allowed_existing_files_or_components:
+    - README.md
+    - .agent/tasks/TASK-0001/task.yaml
+  expected_files_are_restrictive: true
+
+invariants:
+  - "GitHub remote state remains canonical repository truth; topology remains exactly {main} under MAIN_ONLY."
+  - "Argus never becomes canonical owner of EXTERNAL_DERIVED_TRUTH or CONFIRMED_PRODUCT_TRUTH that belongs in a target repository."
+  - "APP_NATIVE_TRUTH is genuinely Argus-owned and must remain recoverable through explicit durability, migration, backup/export and restore semantics."
+  - "SECRETS remain outside ordinary app-native persistence, repository artifacts, logs, backups/exports and audit payloads."
+  - "Authority, capability availability, observed state, freshness and derived health/attention remain distinct concepts."
+  - "Every material derived state is attributable to deterministic identity, source, observation time and freshness/availability evidence."
+  - "Stale, unavailable or unknown external state can never silently degrade into fresh/healthy state."
+  - "Confirmed target-product truth is promoted into the target repository through an explicit traceable boundary; Argus does not retain sole ownership."
+  - "Controlled mutation semantics are fail-closed on stale identity, authority mismatch, capability absence or unverifiable postconditions."
+  - "Phase 0/1 closes foundation design only; Engineering MVP implementation begins no earlier than Phase 2 after VISION LOCK."
+  - "Engineering MVP ends at Phase 5; Engineering V1 ends at Phase 7; Business V1 ends at Phase 10."
+  - "No implementation framework, ORM, Tauri, MCP transport, provider SDK, database engine or agent framework is selected by TASK-0001."
+  - "No runtime source, executable, dependency manifest, workflow, branch, tag, release or repository metadata mutation is introduced."
+  - "Documentation follows agent-documents v1.0.0 authority ownership and reaches closure by evidence, not prose volume."
+
+forbidden_changes:
+  - "Do not modify README.md or TASK-0001 authority during execution."
+  - "Do not create dev, staging, feature, temporary, backup or review branches."
+  - "Do not add runtime source code, UI code, executables, package/dependency manifests, Docker/Compose, CI workflows, deployment configuration or generated runtime artifacts."
+  - "Do not select or scaffold a UI framework, Tauri, ORM, database engine, MCP implementation, provider SDK, agent framework, queue, workflow engine or orchestration framework."
+  - "Do not mutate architect-profile, agent-skills, agent-documents, agent-standards, agent-runtime, SF or any external repository."
+  - "Do not implement Phase 2 or later functionality, including local workspace runtime, Git control runtime, secrets integration, provider integration, task projection, agent execution, business workflows, automation, analytics or hardening."
+  - "Do not create a generated PROGRAM artifact, task DAG, registry, cache service, background worker or another source of mutable authority."
+  - "Do not weaken GitHub SSOT, target-repository product truth, Keychain secret ownership, deterministic identity, provenance/freshness, fail-closed mutation or backup/restore requirements to simplify documentation."
+  - "Do not use N/A or deferred implementation choices to hide unresolved Phase 0/1 design blockers."
+
+gap_policy:
+  local_auto_fix: true
+  scope_expansion: forbidden
+  architecture_change: revised_contract_required
+  spec_change: revised_contract_required
+  dependency_change: revised_contract_required
+  public_contract_change: revised_contract_required
+  blocking_gap_behavior: AUTHORITY_REQUIRED
+
+structure_policy:
+  expected_new_files:
+    - docs/PRODUCT.md
+    - docs/BEHAVIOR.md
+    - docs/ARCHITECTURE.md
+    - docs/DATA.md
+    - docs/INTERFACES.md
+    - docs/QUALITY.md
+    - docs/DELIVERY.md
+    - docs/DECISIONS.md
+    - docs/catalog/project.json
+    - .agent/tasks/TASK-0001/report.yaml
+  unlisted_new_files:
+    allowed: false
+    max: 0
+    within: []
+    purpose: ""
+  allow_new_top_level_directories: true
+  allow_new_shared_modules: false
+
+continuation_policy:
+  mode: MANUAL
+  stop_conditions:
+    - AUTHORITY_REQUIRED
+    - CURRENT_PHASE_CAPABILITY_UNAVAILABLE
+    - STALE_STATE
+    - REVIEW_REQUIRED
+    - USER_STOP
+
+capability_requirements:
+  EXECUTION:
+    - exact_remote_ref_read
+    - repository_content_read
+    - repository_content_write
+    - exact_diff_inspection
+    - deterministic_document_validation
+  REVIEW:
+    - exact_commit_report_resolution
+    - repository_content_read
+    - repository_content_write
+
+acceptance_criteria:
+  - id: AC-1
+    requirement: "Phase 0/1 documentation is structurally closed under pinned agent-documents v1.0.0."
+    evidence_required: "All eight authority-domain roots and docs/catalog/project.json are valid, milestone scope is FROZEN, required coverage is satisfied, references resolve, material entities are reachable, and no blocking DESIGN unknown remains."
+  - id: AC-2
+    requirement: "Product boundary and four truth/ownership classes are explicit and non-overlapping."
+    evidence_required: "PRODUCT/DATA/ARCHITECTURE consistently distinguish EXTERNAL_DERIVED_TRUTH, APP_NATIVE_TRUTH, SECRETS and CONFIRMED_PRODUCT_TRUTH with canonical owner, allowed Argus behavior, persistence and promotion boundaries."
+  - id: AC-3
+    requirement: "Deterministic identity is sufficient for reconciliation and cross-phase traceability."
+    evidence_required: "Identity rules cover repositories, commits/refs, tasks/revisions, local workspaces, external resources, app-native records, observations and promoted requirements; weaker names/paths are not used when canonical IDs or immutable SHAs exist."
+  - id: AC-4
+    requirement: "Observation provenance/freshness reconciliation is closed."
+    evidence_required: "Derived observations carry value, source, observed_at, identity, freshness and availability/confidence semantics; docs specify freshness, supersession, conflict handling, stale/offline/unavailable behavior and provenance retention without stale-as-fresh ambiguity."
+  - id: AC-5
+    requirement: "Health and attention remain explainable derived views rather than mutable truth."
+    evidence_required: "Behavior/data rules derive health/attention from explicit inputs, expose reasons, preserve unknown/stale states and create neither implicit task authority nor a hidden mutable queue."
+  - id: AC-6
+    requirement: "Offline semantics are fail-closed and useful."
+    evidence_required: "Argus-native durable data and last-known observations remain usable offline, external freshness is visible, and operations requiring live external preconditions cannot report success or enter an implicit durable mutation queue."
+  - id: AC-7
+    requirement: "App-native durability and cache separation are implementation-ready without choosing storage technology."
+    evidence_required: "DATA/DELIVERY specify schema versioning, migration, backup/export, restore, restore validation, failure/corruption handling and cache-loss behavior while keeping storage engine and ORM selection deferred."
+  - id: AC-8
+    requirement: "Secret ownership is hard-bounded to macOS Keychain."
+    evidence_required: "Docs forbid secret values in ordinary persistence, repo artifacts, logs, exports/backups and audit payloads; only non-secret references/metadata may be stored, and credential availability is distinct from authority."
+  - id: AC-9
+    requirement: "Audit semantics are bounded, useful and non-authoritative."
+    evidence_required: "Audit requirements cover operator-significant native changes and controlled mutation attempts/results with exact identities, authority/intent, outcome and time while excluding secrets and not duplicating external SSOT."
+  - id: AC-10
+    requirement: "Capability contracts are transport-independent."
+    evidence_required: "INTERFACES/ARCHITECTURE define semantic capabilities and keep GitHub connectors, Agent Runtime, local tooling, MCP/provider transports and SDKs behind future adapters; capability availability never grants authority."
+  - id: AC-11
+    requirement: "Requirement-to-product promotion preserves source-of-truth ownership."
+    evidence_required: "Working opportunity/client/requirement state remains app-native until explicit acceptance; accepted product truth moves into the target repository through a traceable promotion and Argus no longer acts as sole canonical owner."
+  - id: AC-12
+    requirement: "Controlled mutation contract is explicit and fail-closed without runtime implementation."
+    evidence_required: "The contract binds target identity, expected prior state, authority, capability, change intent, preview/diff when meaningful, execution result, verified postcondition and audit evidence; stale/missing/unverifiable inputs block mutation."
+  - id: AC-13
+    requirement: "Future testing boundaries cover deterministic domain, persistence, adapters and mutation safety."
+    evidence_required: "QUALITY defines the required unit/contract/integration/evidence boundaries, migration/restore verification and prohibition on destructive testing against operator production state without adding runtime tests now."
+  - id: AC-14
+    requirement: "Engineering MVP scope and non-goals are frozen at the correct boundary."
+    evidence_required: "Engineering MVP ends at Phase 5, excludes Phase 6+ authority/agent/business/automation/analytics work, and explicitly defers framework/ORM/Tauri/MCP/provider SDK/database-engine/runtime choices."
+  - id: AC-15
+    requirement: "The full agreed milestone program is persisted without turning sequencing into orchestration."
+    evidence_required: "DELIVERY/PRODUCT/DECISIONS contain the exact Phase 0-14 sequence and Engineering MVP/Engineering V1/Business V1 boundaries, with only enough dependency intent for sequencing and no generated execution DAG."
+  - id: AC-16
+    requirement: "Execution remains documentation-only, bounded and reconstructible."
+    evidence_required: "Base-to-implementation diff contains only the nine authorized documentation/catalog files; report is a report-only direct child; README/task remain unchanged; topology is exactly {main}; no runtime/dependency/workflow/branch/tag/release mutation exists."
+
+verification:
+  executor_checks:
+    - id: CHECK-1
+      command_or_check: "Verify exact handoff base, TASK-0001 revision 1, pinned agent-skills/agent-documents commit identities, repository identity, and topology exactly {main} before mutation."
+      required: true
+    - id: CHECK-2
+      command_or_check: "Inspect the bootstrap baseline and build a concise ownership matrix for the four truth classes, their canonical owners, persistence rules, mutation rules and promotion boundaries before writing."
+      required: true
+    - id: CHECK-3
+      command_or_check: "Validate docs/catalog/project.json and every logical reference/coverage/closure rule against agent-documents v1.0.0 using its pinned deterministic validator or an equivalent deterministic check on an authorized execution surface."
+      required: true
+    - id: CHECK-4
+      command_or_check: "Run scenario checks for fresh/stale/unavailable/conflicting observations, offline operation, cache loss, app-native restore/migration failure, missing Keychain secret, and derived health/attention explainability."
+      required: true
+    - id: CHECK-5
+      command_or_check: "Run contract scenario checks for requirement promotion and controlled mutation: exact identity drift, missing authority, missing capability, stale precondition, failed side effect, unverifiable postcondition and audit evidence without secret leakage."
+      required: true
+    - id: CHECK-6
+      command_or_check: "Cross-check PRODUCT, BEHAVIOR, ARCHITECTURE, DATA, INTERFACES, QUALITY, DELIVERY and DECISIONS for contradictory ownership, duplicated SSOT, hidden runtime choices, unresolved Phase 0/1 design blockers or milestone-boundary drift."
+      required: true
+    - id: CHECK-7
+      command_or_check: "Inspect exact base-to-implementation diff and prove only the nine authorized docs/catalog files changed, no runtime/dependency/workflow artifacts were added, README/task were unchanged, and topology remained exactly {main}."
+      required: true
+    - id: CHECK-8
+      command_or_check: "Publish one implementation commit and one report-only direct child, then re-resolve remote lineage, final diff, task/report identity and topology before stopping at NEEDS_REVIEW."
+      required: true
+  authoritative_verification:
+    required: false
+    mechanism: ""
+    expected_signal: ""
+
+git_authority:
+  create_branch: false
+  commit: true
+  push: true
+  promote_to_main: false
+
+release_authority:
+  create_version_tag: false
+  mutate_repository_metadata: false
+  publish_release: false
+
+blocking_decisions: []
+execution_ready: true
