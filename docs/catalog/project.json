@@ -1,0 +1,776 @@
+{
+  "model_version": 1,
+  "milestone": {
+    "id": "PHASE-0-1",
+    "name": "Phase 0 Reality baseline + Phase 1 Vision and ownership closure",
+    "scope_state": "FROZEN",
+    "scope_ref": "docs/PRODUCT.md#Scope",
+    "root_refs": [
+      "ACT-001",
+      "ROL-001",
+      "SYS-001",
+      "DAT-001",
+      "DAT-002",
+      "DAT-003",
+      "DAT-004",
+      "DAT-005",
+      "DAT-006",
+      "IFC-001",
+      "IFC-002",
+      "IFC-003",
+      "IFC-004",
+      "FLW-001",
+      "FLW-002",
+      "FLW-003",
+      "FLW-004",
+      "EXT-001",
+      "EXT-002",
+      "EXT-003",
+      "EXT-004",
+      "DEC-001",
+      "DEC-002",
+      "DEC-003",
+      "DEC-004",
+      "DEC-005",
+      "DEC-006",
+      "DEC-007",
+      "DEC-008",
+      "DEC-009",
+      "DEC-010"
+    ]
+  },
+  "coverage": {
+    "product.objective": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/PRODUCT.md#Objective"
+      ],
+      "rationale": ""
+    },
+    "product.actors_roles": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/PRODUCT.md#ACT-001"
+      ],
+      "rationale": ""
+    },
+    "product.features_capabilities": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/PRODUCT.md#Product-capabilities"
+      ],
+      "rationale": ""
+    },
+    "product.scope_non_goals": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/PRODUCT.md#Scope"
+      ],
+      "rationale": ""
+    },
+    "product.domain_external_constraints": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/PRODUCT.md#Domain-and-external-constraints"
+      ],
+      "rationale": ""
+    },
+    "behavior.functional": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/BEHAVIOR.md#Semantic-behaviors"
+      ],
+      "rationale": ""
+    },
+    "behavior.state_transitions": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/BEHAVIOR.md#Observation-state-model"
+      ],
+      "rationale": ""
+    },
+    "behavior.invariants_permissions": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/BEHAVIOR.md#Behavioral-invariants"
+      ],
+      "rationale": ""
+    },
+    "behavior.errors_edges_failures": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/BEHAVIOR.md#Failure-semantics"
+      ],
+      "rationale": ""
+    },
+    "behavior.critical_flows": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/BEHAVIOR.md#Critical-flows"
+      ],
+      "rationale": ""
+    },
+    "behavior.acceptance": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/BEHAVIOR.md#Foundation-acceptance"
+      ],
+      "rationale": ""
+    },
+    "behavior.safety_human_control": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/BEHAVIOR.md#Human-control"
+      ],
+      "rationale": ""
+    },
+    "architecture.components_ownership": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/ARCHITECTURE.md#SYS-001"
+      ],
+      "rationale": ""
+    },
+    "architecture.runtime_topology": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/ARCHITECTURE.md#Runtime-topology"
+      ],
+      "rationale": ""
+    },
+    "architecture.communication_boundaries": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/ARCHITECTURE.md#Communication-boundaries"
+      ],
+      "rationale": ""
+    },
+    "architecture.technology_choices": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/ARCHITECTURE.md#Technology-deferrals"
+      ],
+      "rationale": ""
+    },
+    "architecture.build_buy": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/ARCHITECTURE.md#Build-buy-defer"
+      ],
+      "rationale": ""
+    },
+    "data.entities_ownership": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/DATA.md#Truth-classes"
+      ],
+      "rationale": ""
+    },
+    "data.lifecycle_persistence": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/DATA.md#Lifecycle-persistence"
+      ],
+      "rationale": ""
+    },
+    "data.retention_deletion": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/DATA.md#Retention-deletion"
+      ],
+      "rationale": ""
+    },
+    "data.consistency_transactions": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/DATA.md#Consistency-transactions"
+      ],
+      "rationale": ""
+    },
+    "data.migration_backfill": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/DATA.md#Schema-migration"
+      ],
+      "rationale": ""
+    },
+    "data.provenance_lineage_quality": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/DATA.md#Observation-provenance"
+      ],
+      "rationale": ""
+    },
+    "interfaces.contracts": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/INTERFACES.md#Capability-contracts"
+      ],
+      "rationale": ""
+    },
+    "interfaces.async_jobs_commands": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/INTERFACES.md#Command-and-job-semantics"
+      ],
+      "rationale": ""
+    },
+    "interfaces.external_dependencies": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/INTERFACES.md#External-dependencies"
+      ],
+      "rationale": ""
+    },
+    "interfaces.data_exchange_trust": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/INTERFACES.md#Data-exchange-and-trust"
+      ],
+      "rationale": ""
+    },
+    "interfaces.dependency_failure_exit": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/INTERFACES.md#Dependency-failure-and-exit"
+      ],
+      "rationale": ""
+    },
+    "quality.authentication": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/QUALITY.md#Authentication"
+      ],
+      "rationale": ""
+    },
+    "quality.authorization_trust_boundaries": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/QUALITY.md#Authorization-and-trust"
+      ],
+      "rationale": ""
+    },
+    "quality.secrets_sensitive_operations": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/QUALITY.md#Secrets-and-sensitive-operations"
+      ],
+      "rationale": ""
+    },
+    "quality.privacy_sensitive_data": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/QUALITY.md#Privacy-and-sensitive-data"
+      ],
+      "rationale": ""
+    },
+    "quality.timeouts_retries_idempotency_recovery": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/QUALITY.md#Timeouts-retries-recovery"
+      ],
+      "rationale": ""
+    },
+    "quality.concurrency_failure_boundaries": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/QUALITY.md#Concurrency-and-drift"
+      ],
+      "rationale": ""
+    },
+    "quality.performance_load_resources": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/QUALITY.md#Performance-and-resources"
+      ],
+      "rationale": ""
+    },
+    "quality.observability": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/QUALITY.md#Observability"
+      ],
+      "rationale": ""
+    },
+    "quality.testing_evidence": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/QUALITY.md#Testing-evidence"
+      ],
+      "rationale": ""
+    },
+    "quality.cost_usage_bounds": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/QUALITY.md#Cost-and-usage"
+      ],
+      "rationale": ""
+    },
+    "delivery.environments_config": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/DELIVERY.md#Environments-and-configuration"
+      ],
+      "rationale": ""
+    },
+    "delivery.deployment_migration_rollback": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/DELIVERY.md#Migration-and-rollback"
+      ],
+      "rationale": ""
+    },
+    "delivery.backup_restore": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/DELIVERY.md#Backup-and-restore"
+      ],
+      "rationale": ""
+    },
+    "delivery.compatibility_versioning_platforms": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/DELIVERY.md#Compatibility-and-platform"
+      ],
+      "rationale": ""
+    },
+    "delivery.operational_ownership": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/DELIVERY.md#Operational-ownership"
+      ],
+      "rationale": ""
+    },
+    "decisions.material_choices": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/DECISIONS.md#Material-decisions"
+      ],
+      "rationale": ""
+    },
+    "unknowns.open_questions": {
+      "applicability": "APPLICABLE",
+      "required_depth": "L1",
+      "actual_depth": "L1",
+      "support_refs": [
+        "docs/DECISIONS.md#Unknown-closure"
+      ],
+      "rationale": ""
+    }
+  },
+  "actors": [
+    {
+      "id": "ACT-001",
+      "name": "Operator",
+      "kind": "HUMAN",
+      "doc_ref": "docs/PRODUCT.md#ACT-001"
+    }
+  ],
+  "roles": [
+    {
+      "id": "ROL-001",
+      "name": "Operator",
+      "actor_refs": [
+        "ACT-001"
+      ],
+      "doc_ref": "docs/PRODUCT.md#ROL-001"
+    }
+  ],
+  "features": [],
+  "acceptance": [],
+  "systems": [
+    {
+      "id": "SYS-001",
+      "name": "Argus local control plane",
+      "doc_ref": "docs/ARCHITECTURE.md#SYS-001",
+      "decision_refs": [
+        "DEC-001",
+        "DEC-002",
+        "DEC-003",
+        "DEC-004",
+        "DEC-005",
+        "DEC-006",
+        "DEC-007",
+        "DEC-008",
+        "DEC-009",
+        "DEC-010"
+      ]
+    }
+  ],
+  "data": [
+    {
+      "id": "DAT-001",
+      "name": "App-native working records",
+      "kind": "PERSISTENT",
+      "owner_system_ref": "SYS-001",
+      "doc_ref": "docs/DATA.md#DAT-001"
+    },
+    {
+      "id": "DAT-002",
+      "name": "External observation ledger",
+      "kind": "PERSISTENT",
+      "owner_system_ref": "SYS-001",
+      "doc_ref": "docs/DATA.md#DAT-002"
+    },
+    {
+      "id": "DAT-003",
+      "name": "Credential references",
+      "kind": "PERSISTENT",
+      "owner_system_ref": "SYS-001",
+      "doc_ref": "docs/DATA.md#DAT-003"
+    },
+    {
+      "id": "DAT-004",
+      "name": "Audit evidence",
+      "kind": "PERSISTENT",
+      "owner_system_ref": "SYS-001",
+      "doc_ref": "docs/DATA.md#DAT-004"
+    },
+    {
+      "id": "DAT-005",
+      "name": "Promotion links",
+      "kind": "PERSISTENT",
+      "owner_system_ref": "SYS-001",
+      "doc_ref": "docs/DATA.md#DAT-005"
+    },
+    {
+      "id": "DAT-006",
+      "name": "Health and attention view",
+      "kind": "MATERIAL_EPHEMERAL",
+      "owner_system_ref": "SYS-001",
+      "doc_ref": "docs/DATA.md#DAT-006"
+    }
+  ],
+  "interfaces": [
+    {
+      "id": "IFC-001",
+      "name": "Observation capability",
+      "kind": "PROTOCOL",
+      "owner_system_ref": "SYS-001",
+      "peer_refs": [
+        "EXT-001",
+        "EXT-002",
+        "EXT-003"
+      ],
+      "doc_ref": "docs/INTERFACES.md#IFC-001"
+    },
+    {
+      "id": "IFC-002",
+      "name": "Controlled mutation capability",
+      "kind": "COMMAND",
+      "owner_system_ref": "SYS-001",
+      "peer_refs": [
+        "EXT-001",
+        "EXT-002",
+        "EXT-003"
+      ],
+      "doc_ref": "docs/INTERFACES.md#IFC-002"
+    },
+    {
+      "id": "IFC-003",
+      "name": "Requirement promotion contract",
+      "kind": "PROTOCOL",
+      "owner_system_ref": "SYS-001",
+      "peer_refs": [
+        "EXT-001"
+      ],
+      "doc_ref": "docs/INTERFACES.md#IFC-003"
+    },
+    {
+      "id": "IFC-004",
+      "name": "Secret resolution contract",
+      "kind": "PROTOCOL",
+      "owner_system_ref": "SYS-001",
+      "peer_refs": [
+        "EXT-004"
+      ],
+      "doc_ref": "docs/INTERFACES.md#IFC-004"
+    }
+  ],
+  "flows": [
+    {
+      "id": "FLW-001",
+      "name": "Observe and reconcile",
+      "kind": "SYSTEM",
+      "critical": true,
+      "doc_ref": "docs/BEHAVIOR.md#FLW-001",
+      "system_refs": [
+        "SYS-001"
+      ],
+      "interface_refs": [
+        "IFC-001"
+      ],
+      "data_refs": [
+        "DAT-002",
+        "DAT-006"
+      ],
+      "dependency_refs": [
+        "EXT-001",
+        "EXT-002",
+        "EXT-003"
+      ]
+    },
+    {
+      "id": "FLW-002",
+      "name": "Promote requirement",
+      "kind": "USER",
+      "critical": true,
+      "doc_ref": "docs/BEHAVIOR.md#FLW-002",
+      "system_refs": [
+        "SYS-001"
+      ],
+      "interface_refs": [
+        "IFC-003"
+      ],
+      "data_refs": [
+        "DAT-001",
+        "DAT-004",
+        "DAT-005"
+      ],
+      "dependency_refs": [
+        "EXT-001"
+      ]
+    },
+    {
+      "id": "FLW-003",
+      "name": "Controlled external mutation",
+      "kind": "USER",
+      "critical": true,
+      "doc_ref": "docs/BEHAVIOR.md#FLW-003",
+      "system_refs": [
+        "SYS-001"
+      ],
+      "interface_refs": [
+        "IFC-002"
+      ],
+      "data_refs": [
+        "DAT-002",
+        "DAT-004"
+      ],
+      "dependency_refs": [
+        "EXT-001",
+        "EXT-002",
+        "EXT-003"
+      ]
+    },
+    {
+      "id": "FLW-004",
+      "name": "Offline inspection",
+      "kind": "USER",
+      "critical": true,
+      "doc_ref": "docs/BEHAVIOR.md#FLW-004",
+      "system_refs": [
+        "SYS-001"
+      ],
+      "interface_refs": [],
+      "data_refs": [
+        "DAT-001",
+        "DAT-002",
+        "DAT-006"
+      ],
+      "dependency_refs": []
+    }
+  ],
+  "dependencies": [
+    {
+      "id": "EXT-001",
+      "name": "GitHub and target repositories",
+      "kind": "SERVICE",
+      "critical": true,
+      "doc_ref": "docs/INTERFACES.md#EXT-001"
+    },
+    {
+      "id": "EXT-002",
+      "name": "Local Git and workspaces",
+      "kind": "PLATFORM",
+      "critical": true,
+      "doc_ref": "docs/INTERFACES.md#EXT-002"
+    },
+    {
+      "id": "EXT-003",
+      "name": "Provider APIs and resources",
+      "kind": "API",
+      "critical": false,
+      "doc_ref": "docs/INTERFACES.md#EXT-003"
+    },
+    {
+      "id": "EXT-004",
+      "name": "macOS Keychain",
+      "kind": "PLATFORM",
+      "critical": true,
+      "doc_ref": "docs/INTERFACES.md#EXT-004"
+    }
+  ],
+  "capabilities": [],
+  "decisions": [
+    {
+      "id": "DEC-001",
+      "kind": "ARCHITECTURE",
+      "subject": "Product topology and source-of-truth boundary",
+      "outcome": "Operator-local control plane; external systems retain canonical truth",
+      "reversibility": "COSTLY",
+      "doc_ref": "docs/DECISIONS.md#DEC-001"
+    },
+    {
+      "id": "DEC-002",
+      "kind": "DATA",
+      "subject": "Truth ownership classes",
+      "outcome": "Exactly four non-overlapping truth classes",
+      "reversibility": "COSTLY",
+      "doc_ref": "docs/DECISIONS.md#DEC-002"
+    },
+    {
+      "id": "DEC-003",
+      "kind": "DATA",
+      "subject": "Identity and observation reconciliation",
+      "outcome": "Prefer canonical immutable identity and preserve provenance/freshness/conflicts",
+      "reversibility": "COSTLY",
+      "doc_ref": "docs/DECISIONS.md#DEC-003"
+    },
+    {
+      "id": "DEC-004",
+      "kind": "DATA",
+      "subject": "Argus-native durability",
+      "outcome": "Storage-independent migration, backup/export, restore, validation, and cache separation",
+      "reversibility": "COSTLY",
+      "doc_ref": "docs/DECISIONS.md#DEC-004"
+    },
+    {
+      "id": "DEC-005",
+      "kind": "ARCHITECTURE",
+      "subject": "Secret ownership",
+      "outcome": "macOS Keychain owns secret values; Argus stores references only",
+      "reversibility": "COSTLY",
+      "doc_ref": "docs/DECISIONS.md#DEC-005"
+    },
+    {
+      "id": "DEC-006",
+      "kind": "INTERFACE",
+      "subject": "Execution capability abstraction",
+      "outcome": "Transport-independent semantic capabilities; availability is separate from authority",
+      "reversibility": "REVERSIBLE",
+      "doc_ref": "docs/DECISIONS.md#DEC-006"
+    },
+    {
+      "id": "DEC-007",
+      "kind": "ARCHITECTURE",
+      "subject": "Controlled external mutation",
+      "outcome": "Fail closed on identity, authority, capability, precondition, side-effect, or postcondition uncertainty",
+      "reversibility": "COSTLY",
+      "doc_ref": "docs/DECISIONS.md#DEC-007"
+    },
+    {
+      "id": "DEC-008",
+      "kind": "OTHER",
+      "subject": "Requirement-to-product promotion",
+      "outcome": "Accepted product truth is materialized and canonical in the target repository",
+      "reversibility": "COSTLY",
+      "doc_ref": "docs/DECISIONS.md#DEC-008"
+    },
+    {
+      "id": "DEC-009",
+      "kind": "DELIVERY",
+      "subject": "Milestone boundaries",
+      "outcome": "Engineering MVP ends Phase 5, Engineering V1 Phase 7, Business V1 Phase 10",
+      "reversibility": "REVERSIBLE",
+      "doc_ref": "docs/DECISIONS.md#DEC-009"
+    },
+    {
+      "id": "DEC-010",
+      "kind": "TECHNOLOGY",
+      "subject": "Runtime technology selection",
+      "outcome": "Defer implementation technology until the authorized phase that materially needs it",
+      "reversibility": "REVERSIBLE",
+      "doc_ref": "docs/DECISIONS.md#DEC-010"
+    }
+  ],
+  "unknowns": []
+}
