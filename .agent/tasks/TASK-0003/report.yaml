@@ -1,0 +1,236 @@
+protocol_version: 3
+
+task_id: TASK-0003
+task_revision: 3
+report_revision: 1
+state: REPORTED
+
+task_source:
+  path: .agent/tasks/TASK-0003/task.yaml
+
+execution:
+  repository: phatnguyen03022001/argus
+  branch:
+    name: main
+    role: canonical
+  authorized_base_head: a6063a70b3529b5f50841514b48b9d8692689486
+  pre_execution_head: a6063a70b3529b5f50841514b48b9d8692689486
+  final_execution_head: abb51da15b6038008dd45f831c8473847d5a9456
+
+skill_library:
+  repository: phatnguyen03022001/agent-skills
+  authorized_revision: 76f2d3877d1698f91eb5a6117e2301ed49480379
+  observed_revision: 76f2d3877d1698f91eb5a6117e2301ed49480379
+
+execution_skills_used:
+  required:
+    - executor
+    - simplicity
+    - verification
+  recommended:
+    - security-review
+  external: []
+
+pre_execution_checks:
+  protocol_version_supported: true
+  handoff_type_confirmed: true
+  task_at_base_confirmed: true
+  task_identity_confirmed: true
+  architect_binding_confirmed: true
+  repository_confirmed: true
+  branch_confirmed: true
+  base_head_confirmed: true
+  skill_revision_confirmed: true
+  required_execution_skills_available: true
+  structure_authority_confirmed: true
+  working_tree_clean: false
+
+capability_preflight:
+  phase: EXECUTION
+  required:
+    - exact_remote_ref_read
+    - repository_content_read
+    - repository_content_write
+    - native_local_execution
+    - filesystem_test_fixture_execution
+    - git_read_observation
+    - github_cli_read_observation
+    - package_install
+    - test_execution
+    - production_build_execution
+    - loopback_runtime_smoke
+    - exact_diff_inspection
+  available:
+    - exact_remote_ref_read via git ls-remote and gh api
+    - repository_content_read/write in the bound checkout
+    - native_local_execution and filesystem fixture execution
+    - system git 2.55.0 read observation boundary
+    - authenticated system gh 2.94.0 read observation boundary
+    - Node 24.19.0 and pnpm 11.24.0 package/test/build execution
+    - bounded 127.0.0.1 production runtime smoke
+    - exact Git diff/source inspection
+  missing: []
+  passed: true
+
+operational_timing:
+  started_at_utc: "2026-09-03T08:29:39Z"
+  terminal_decision_at_utc: "2026-09-03T08:35:55Z"
+
+authoritative_verification:
+  required: false
+  performed: false
+  result: NOT_REQUIRED
+  evidence: "Task authoritative_verification.required is false."
+
+local_hygiene:
+  result: PASS
+  run_root: /private/tmp/argus-task-0003-smoke.DukZoi
+  cleanup_performed: true
+  retained: []
+  evidence: "The run-owned, non-symlink temporary root was realpath-checked, used only for loopback smoke data/logs, and removed after the server stopped."
+
+changed_files:
+  - path: app/globals.css
+    summary: "Styles repository observation and evidence UI."
+    new_file: false
+    in_scope: true
+    structure_authorized: true
+  - path: app/page.tsx
+    summary: "Loads repository observations for the workspace home."
+    new_file: false
+    in_scope: true
+    structure_authorized: true
+  - path: app/repositories/route.ts
+    summary: "Adds the bounded workspace repository refresh route."
+    new_file: true
+    in_scope: true
+    structure_authorized: true
+  - path: src/persistence.ts
+    summary: "Adds schema v2 repository index and external observation storage."
+    new_file: false
+    in_scope: true
+    structure_authorized: true
+  - path: src/repositories.ts
+    summary: "Implements bounded read-only Git/GitHub discovery and observation adapters."
+    new_file: true
+    in_scope: true
+    structure_authorized: true
+  - path: src/repository-observations.ts
+    summary: "Persists, reconciles, refreshes, and renders repository observation evidence."
+    new_file: true
+    in_scope: true
+    structure_authorized: true
+  - path: src/workspace-app.ts
+    summary: "Exposes workspace repository refresh and listing application operations."
+    new_file: false
+    in_scope: true
+    structure_authorized: true
+  - path: src/workspace-home.tsx
+    summary: "Renders raw repository facts and availability/freshness/conflict evidence."
+    new_file: false
+    in_scope: true
+    structure_authorized: true
+  - path: src/workspace-store.ts
+    summary: "Exports repository observation modules."
+    new_file: false
+    in_scope: true
+    structure_authorized: true
+  - path: tests/application.test.tsx
+    summary: "Covers refresh UI and explicit unavailable/unknown/conflict rendering."
+    new_file: false
+    in_scope: true
+    structure_authorized: true
+  - path: tests/next-adapter.test.tsx
+    summary: "Covers the Next refresh route and rendered raw evidence."
+    new_file: false
+    in_scope: true
+    structure_authorized: true
+  - path: tests/repository-observation.test.ts
+    summary: "Covers discovery, linked worktrees, local/GitHub observations, persistence, conflicts, stale data, and mutable facts."
+    new_file: true
+    in_scope: true
+    structure_authorized: true
+  - path: tests/workspace.test.ts
+    summary: "Updates migration and export expectations for schema v2."
+    new_file: false
+    in_scope: true
+    structure_authorized: true
+
+commits_created:
+  - sha: abb51da15b6038008dd45f831c8473847d5a9456
+    message: "feat: observe workspace repositories"
+
+pushed: true
+promoted_to_main: false
+
+acceptance_evidence:
+  - criterion_id: AC-1
+    status: PASS
+    evidence: "Repository observation tests cover normal and linked worktree discovery, ordinary-directory rejection, nested repository stop, symlink-cycle avoidance, and read-only fixture invariance."
+  - criterion_id: AC-2
+    status: PASS
+    evidence: "Local observation tests cover full HEAD, branch/detached state, dirty state, remotes, upstream, and locally provable ahead/behind."
+  - criterion_id: AC-3
+    status: PASS
+    evidence: "Injected gh tests cover HTTPS/SSH alias normalization, immutable repository ID, ref SHA, non-GitHub and unavailable evidence without secret propagation."
+  - criterion_id: AC-4
+    status: PASS
+    evidence: "Schema v2 and repository observation tests cover deterministic identities, current success, stale retained last-known evidence, provenance, reopen behavior, and conflict preservation."
+  - criterion_id: AC-5
+    status: PASS
+    evidence: "Refresh tests show linked worktrees adopting the same stronger github:4242 identity while retaining per-worktree observations."
+  - criterion_id: AC-6
+    status: PASS
+    evidence: "Application and Next adapter tests cover refresh/listing and explicit AVAILABLE/CURRENT plus UNAVAILABLE/UNKNOWN/CONFLICTED rendering without health taxonomy."
+  - criterion_id: AC-7
+    status: PASS
+    evidence: "Read-only Git/gh command allowlist tests reject mutation commands; fixture snapshots prove repository control state and files remain unchanged."
+  - criterion_id: AC-8
+    status: PASS
+    evidence: "pnpm install --frozen-lockfile and pnpm verify passed; production Next smoke returned HTTP 200 on 127.0.0.1 with run-owned temporary Argus data."
+  - criterion_id: AC-9
+    status: PASS
+    evidence: "Base-to-implementation diff is confined to the authorized 13 repository-observation/UI/persistence/test paths; no dependency, health, sync, environment, provider, deployment, branch, tag, or external-repository mutation scope was found."
+  - criterion_id: AC-10
+    status: PASS
+    evidence: "Pre-mutation recovery hash was exactly 476dee24be553e5d21e8f572585e8aced435e1eda0fc97f3c99f5519b0e92cb1 over the authorized 13 paths. The dirty-at-unchanged-HEAD regression was RED before correction and GREEN after local facts stopped using HEAD as immutable source-version evidence; generic immutable same-version conflict coverage remains GREEN."
+
+executor_checks:
+  - check_id: CHECK-0
+    result: PASS
+    evidence: "Local HEAD and origin/main equaled a6063a70b3529b5f50841514b48b9d8692689486; exact normative recovery script returned the required SHA-256 and exactly 13 authorized paths."
+  - check_id: CHECK-1
+    result: PASS
+    evidence: "GitHub main, exact base task blob, pinned skill revision, accepted TASK-0002 review, MAIN_ONLY topology, candidate path set, system git/gh, and all execution capabilities were freshly resolved before mutation."
+  - check_id: CHECK-2
+    result: PASS
+    evidence: "Deterministic temporary fixtures cover normal/linked, dirty/detached, nested-stop, ordinary, and symlink-cycle cases with before/after repository invariance."
+  - check_id: CHECK-3
+    result: PASS
+    evidence: "Injected gh contracts cover identity/ref normalization, unavailable/non-GitHub states, and secret-free normalized results."
+  - check_id: CHECK-4
+    result: PASS
+    evidence: "Persistence tests cover current-to-stale preservation, conflict retention, stronger identity adoption, and reopen behavior."
+  - check_id: CHECK-5
+    result: PASS
+    evidence: "Application/UI tests cover refresh/listing and explicit unavailable/unknown/conflict evidence without health projection."
+  - check_id: CHECK-6
+    result: PASS
+    evidence: "Fresh frozen-lockfile install and pnpm verify passed: typecheck, 4 Vitest files/15 tests, and production build. Final bounded production smoke on 127.0.0.1:33417 returned HTTP 200."
+  - check_id: CHECK-7
+    result: PASS
+    evidence: "Exact 13-path diff, source command boundary, dependency/lockfile, secret, runtime artifact, background automation, health/sync/Phase 4+ scope, and no-mutation inspections passed."
+  - check_id: CHECK-8
+    result: PENDING_POST_COMMIT
+    evidence: "Implementation commit abb51da15b6038008dd45f831c8473847d5a9456 is published on main. Report-only child publication and final remote/report/topology/clean-state resolution remain required before terminal handoff."
+
+discovered_gaps: []
+structural_observations: []
+deviations_from_task: []
+blockers: []
+
+working_tree_after:
+  clean: false
+  summary: "Report-only child is not committed at report authoring time."
+
+result: NEEDS_REVIEW
