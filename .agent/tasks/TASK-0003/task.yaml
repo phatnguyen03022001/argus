@@ -1,13 +1,13 @@
 protocol_version: 3
 
 task_id: TASK-0003
-task_revision: 1
+task_revision: 2
 state: APPROVED
 
 origin:
   type: user_request
   task_id: ""
-  gap_id: "PHASE3_REPOSITORY_OBSERVATION_SLICE"
+  gap_id: "PHASE3_REPOSITORY_OBSERVATION_RECOVERY"
 
 architect_binding:
   target_repository: phatnguyen03022001/argus
@@ -63,15 +63,33 @@ structure_authority:
     daemon, or Phase 4+ module hierarchy. Source structure remains shallow and responsibility-oriented.
 
 objective: >-
-  Implement the first Phase 3 Git/repository-control slice as read-only repository discovery and evidence-bearing
-  Git observation. From configured Phase 2 workspace roots, Argus must discover local Git repositories/worktrees,
-  resolve deterministic repository identity when GitHub evidence is available, observe local Git state and live
-  GitHub canonical ref state without mutating discovered repositories, persist last-known provenance-bearing
-  observations, and expose those facts in the local UI. Derived health/attention and Git mutation/sync actions are
-  deliberately deferred to later Phase 3 tasks.
+  Recover and complete the already-started first Phase 3 Git/repository-control slice without discarding or broadly
+  rewriting the authorized local implementation produced under TASK-0003 revision 1. Adopt only the exact bounded
+  local candidate identified by the recovery hash below, correct the reproduced mutable-local-fact reconciliation
+  defect, finish every original verification gate, publish one implementation commit plus report-only child, and
+  preserve the original read-only repository discovery/Git/GitHub observation boundary. Derived health/attention and
+  Git mutation/sync actions remain deferred to later Phase 3 tasks.
 
 scope:
   required_changes:
+    - >-
+      Revision-2 recovery may adopt exactly one pre-existing operator-local dirty implementation state: original
+      execution base 2b5e3496a94f6ba2df6da8dbe015a67c6b1311d3 with combined tracked-diff/untracked-content SHA-256
+      476dee24be553e5d21e8f572585e8aced435e1eda0fc97f3c99f5519b0e92cb1 and exactly these changed paths:
+      app/globals.css, app/page.tsx, app/repositories/route.ts, src/persistence.ts, src/repositories.ts,
+      src/repository-observations.ts, src/workspace-app.ts, src/workspace-home.tsx, src/workspace-store.ts,
+      tests/application.test.tsx, tests/next-adapter.test.tsx, tests/repository-observation.test.ts, and
+      tests/workspace.test.ts. Before any implementation mutation, recompute the same canonical hash algorithm and
+      exact path set on the revision-2 handoff checkout. Any mismatch is STALE_STATE/BLOCKED; do not reset, stash,
+      discard, or silently adopt another dirty state.
+    - >-
+      Resolve the reproduced correctness defect before final verification: mutable local observations such as dirty
+      state, remotes, branch/upstream and locally computed ahead/behind can change while HEAD is unchanged, so HEAD
+      SHA must not be used as immutable source-version evidence for those mutable facts in a way that manufactures
+      CONFLICTED reconciliation. Re-run the existing regression covering dirty-state change at the same HEAD, apply
+      the smallest semantics-preserving correction, and require the regression plus the complete repository
+      observation suite to pass. Preserve genuine same-immutable-version conflict behavior for facts where a strong
+      immutable source version actually exists.
     - >-
       Discover Git repositories and linked worktrees reachable beneath configured active workspace roots using a
       bounded filesystem traversal that is safe against symlink cycles and does not descend into Git internals,
@@ -155,6 +173,8 @@ scope:
   expected_files_are_restrictive: false
 
 invariants:
+  - "Revision-2 recovery may adopt only the exact dirty TASK-0003 candidate hash 476dee24be553e5d21e8f572585e8aced435e1eda0fc97f3c99f5519b0e92cb1 over the exact 13 authorized changed paths; mismatch fails closed and no local state is discarded."
+  - "Mutable local Git facts must not be treated as conflicting immutable-version evidence merely because HEAD is unchanged across observations."
   - "GitHub remote evidence remains canonical for GitHub-hosted repository refs/objects; Argus stores observations/indexes only."
   - "Local Git/workspace state is operator-owned execution evidence and must never be reset, cleaned, stashed, checked out, fetched, pulled, committed, pushed, or otherwise mutated by TASK-0003."
   - "Repository identity prefers provider-issued immutable GitHub identity when available; filesystem path and owner/name/URL remain aliases or local metadata."
@@ -250,8 +270,15 @@ acceptance_criteria:
     requirement: "Execution lineage stays exact and Phase 3 scope does not leak forward."
     evidence_required: "Base-to-implementation diff contains only authorized repository-observation/UI/persistence/test/README changes, report is a report-only direct child, final topology is {main}, and no health/sync/environment/provider/task/agent/business/deployment behavior or external-repository mutation appears."
 
+  - id: AC-10
+    requirement: "Revision-2 recovery preserves exact local-candidate provenance and closes the reproduced mutable-fact reconciliation defect."
+    evidence_required: "Executor preflight proves exact original base, recovery patch SHA-256 and 13-path set before mutation; regression proves dirty/remotes/branch/upstream/ahead-behind changes at unchanged HEAD do not create false CONFLICTED evidence while genuine immutable-version conflict semantics remain intact."
+
 verification:
   executor_checks:
+    - id: CHECK-0
+      command_or_check: "Before any implementation mutation, prove local HEAD is the exact revision-2 handoff base, recompute the authorized recovery candidate hash/path set against that base, and require exact match to 476dee24be553e5d21e8f572585e8aced435e1eda0fc97f3c99f5519b0e92cb1 plus the 13 authorized paths. Do not clean/reset/stash/adopt on mismatch."
+      required: true
     - id: CHECK-1
       command_or_check: "Fresh-preflight exact TASK-0003/base/pinned authority, accepted TASK-0002 review, MAIN_ONLY topology, clean local execution copy, system git/gh read capability, package/test/build/runtime capability before mutation."
       required: true
