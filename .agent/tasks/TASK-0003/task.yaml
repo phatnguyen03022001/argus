@@ -1,13 +1,13 @@
 protocol_version: 3
 
 task_id: TASK-0003
-task_revision: 3
+task_revision: 4
 state: APPROVED
 
 origin:
-  type: user_request
-  task_id: ""
-  gap_id: "PHASE3_RECOVERY_HASH_SERIALIZATION"
+  type: review_revision
+  task_id: TASK-0003
+  gap_id: "GIT_STATUS_OPTIONAL_INDEX_WRITE"
 
 architect_binding:
   target_repository: phatnguyen03022001/argus
@@ -29,8 +29,8 @@ skill_library:
 
 architect_analysis_skills:
   - architect
-  - reuse-first
   - simplicity
+  - verification
 
 execution_skills:
   required:
@@ -46,182 +46,118 @@ external_skills:
   execution_recommended: []
 
 authority_sources:
-  - source: "phatnguyen03022001/argus@ae1ca6a506b46c6e0914182f32d4a52bf78d1341"
-    role: "Accepted Phase 0/1 Vision Lock plus accepted Phase 2 local workspace foundation and its canonical review lineage."
+  - source: "phatnguyen03022001/argus@6b013c229dc9ccf8704e2c28c1a1bde16a1ea881"
+    role: "Canonical Architect REVISION_REQUIRED review identifying the exact TASK-0003 correction gaps."
     precedence: 1
-  - source: "phatnguyen03022001/agent-skills@76f2d3877d1698f91eb5a6117e2301ed49480379"
-    role: "Released protocol-v3 execution, reuse-first, simplicity, verification, and Git/GitHub workflow authority."
+  - source: "phatnguyen03022001/argus@abb51da15b6038008dd45f831c8473847d5a9456"
+    role: "Existing Phase 3 repository-observation implementation to correct without redesign or feature expansion."
     precedence: 2
+  - source: "phatnguyen03022001/argus@cc4e07464c6c1815722f5bec1b3805a49aa7f3c8"
+    role: "TASK-0003 revision-3 Executor report whose green evidence may be reused only for immutable unchanged facts; mutable verification must be rerun after correction."
+    precedence: 3
+  - source: "phatnguyen03022001/agent-skills@76f2d3877d1698f91eb5a6117e2301ed49480379"
+    role: "Released protocol-v3 Executor, simplicity, verification, and Git/GitHub workflow authority."
+    precedence: 4
 
 structure_authority:
   status: RESOLVED
-  source: "Argus accepted foundation through TASK-0002 plus TASK-0003 revision 1."
+  source: "TASK-0003 revision 4 bounded review correction."
   rationale: >-
-    Extend the existing single-package Next.js/local SQLite application with one bounded Phase 3 repository
-    observation slice. Reuse the system Git and GitHub CLI capabilities behind narrow project-owned process
-    boundaries; add no Git/GitHub npm SDK, service split, generic plugin registry, background worker, queue,
-    daemon, or Phase 4+ module hierarchy. Source structure remains shallow and responsibility-oriented.
+    Preserve the existing Phase 3 implementation shape. Correct only the runtime Git read boundary, local
+    observation source-version assignment, focused regression evidence, and stale README capability wording.
+    No new source file, dependency, abstraction, service, route, persistence schema, UI feature, or directory is
+    needed or authorized.
 
 objective: >-
-  Recover and complete the already-started first Phase 3 Git/repository-control slice without discarding or broadly
-  rewriting the authorized local implementation produced under TASK-0003 revision 1. Adopt only the exact bounded
-  local candidate identified by the recovery hash below, correct the reproduced mutable-local-fact reconciliation
-  defect, finish every original verification gate, publish one implementation commit plus report-only child, and
-  preserve the original read-only repository discovery/Git/GitHub observation boundary. Derived health/attention and
-  Git mutation/sync actions remain deferred to later Phase 3 tasks.
+  Close the exact TASK-0003 revision-3 review gaps without redesigning the accepted Phase 3 observation slice:
+  prevent system Git observation from performing optional index/stat-cache writes in discovered operator
+  repositories, retain immutable source-version evidence only where semantically valid, refresh the README to the
+  current Phase 3 read-only observation boundary, reverify the complete existing slice, publish one bounded
+  correction commit plus report revision 2, and stop at NEEDS_REVIEW.
 
 scope:
   required_changes:
     - >-
-      Revision-3 recovery may adopt exactly one pre-existing operator-local dirty implementation state: original
-      execution base 2b5e3496a94f6ba2df6da8dbe015a67c6b1311d3 with combined tracked-diff/untracked-content SHA-256
-      476dee24be553e5d21e8f572585e8aced435e1eda0fc97f3c99f5519b0e92cb1 and exactly these changed paths:
-      app/globals.css, app/page.tsx, app/repositories/route.ts, src/persistence.ts, src/repositories.ts,
-      src/repository-observations.ts, src/workspace-app.ts, src/workspace-home.tsx, src/workspace-store.ts,
-      tests/application.test.tsx, tests/next-adapter.test.tsx, tests/repository-observation.test.ts, and
-      tests/workspace.test.ts. Before any implementation mutation, recompute the canonical recovery hash using the exact normative script in the next requirement and
-      exact path set on the revision-3 handoff checkout. Any mismatch is STALE_STATE/BLOCKED; do not reset, stash,
-      discard, or silently adopt another dirty state.
+      Make every runtime system-Git observation subprocess operationally read-only by setting
+      `GIT_OPTIONAL_LOCKS=0` (or an exactly equivalent Git-supported no-optional-write mechanism) in the child Git
+      environment while preserving the inherited process environment needed for normal Git resolution. The setting
+      must cover every command admitted through the production read-only Git boundary, including status, without
+      changing fixture-only Git commands used to construct tests.
     - >-
-      Canonical recovery-hash serialization is normative. Execute the following exact POSIX-shell script from the
-      Argus repository root before any implementation mutation. Its stdout is the authoritative recovery hash:
-      `export LC_ALL=C; { git diff --binary; git ls-files --others --exclude-standard -z | sort -z | xargs -0 -I{} sh -c 'printf "FILE:%s\n" "$1"; cat "$1"' sh {}; } | shasum -a 256 | awk '{print $1}'`.
-      The hashed input byte stream is therefore exactly: (1) stdout bytes from `git diff --binary` against current
-      HEAD for tracked worktree changes; then (2) untracked repository-relative paths from
-      `git ls-files --others --exclude-standard -z`, bytewise/NUL sorted under LC_ALL=C, each serialized as the bytes
-      `FILE:` + exact path + newline followed immediately by that file's exact bytes, with no extra separator.
-      For the authorized recovery candidate the command must output exactly
-      476dee24be553e5d21e8f572585e8aced435e1eda0fc97f3c99f5519b0e92cb1.
+      Add a causal regression fixture that creates a committed tracked file, changes only filesystem stat/mtime so
+      the index can be refreshed without content change, records exact `.git/index` bytes or cryptographic hash,
+      executes the production local-repository observation path, and proves index/HEAD/refs/config/worktree/remotes
+      remain unchanged. The test must fail against the revision-3 implementation or otherwise demonstrate the
+      reproduced default-Git mutation condition and prove the corrected boundary prevents it.
     - >-
-      Resolve the reproduced correctness defect before final verification: mutable local observations such as dirty
-      state, remotes, branch/upstream and locally computed ahead/behind can change while HEAD is unchanged, so HEAD
-      SHA must not be used as immutable source-version evidence for those mutable facts in a way that manufactures
-      CONFLICTED reconciliation. Re-run the existing regression covering dirty-state change at the same HEAD, apply
-      the smallest semantics-preserving correction, and require the regression plus the complete repository
-      observation suite to pass. Preserve genuine same-immutable-version conflict behavior for facts where a strong
-      immutable source version actually exists.
+      Refine local observation source-version semantics. Mutable facts whose values can change independently of
+      HEAD (`git.dirty`, `git.remotes`, `git.branch`, `git.detached`, `git.upstream`, `git.ahead-behind`, and mutable
+      local/path metadata) must not use HEAD as immutable source-version evidence. `git.head` must retain the exact
+      full commit SHA as source-version evidence because the immutable version is available and governs that fact.
+      Preserve generic same-immutable-version conflict detection and do not manufacture conflicts for mutable facts.
     - >-
-      Discover Git repositories and linked worktrees reachable beneath configured active workspace roots using a
-      bounded filesystem traversal that is safe against symlink cycles and does not descend into Git internals,
-      dependency/build output, Argus runtime data, or another already-recognized repository working tree merely to
-      find nested implementation directories. Ordinary non-Git directories remain ordinary workspace contents and
-      must not be initialized, modified, or misclassified as repositories.
+      Extend focused tests to prove `git.head` persists its SHA as `source_version`, mutable local facts use null (or
+      equivalent explicit absence) for source version, dirty-at-same-HEAD remains non-conflicted, and the existing
+      genuine immutable same-version conflict fixture remains CONFLICTED.
     - >-
-      Recognize normal Git working trees and linked worktrees where `.git` is a file as well as a directory. Bare
-      repositories may be represented as unsupported/observed when encountered but are not required to become
-      Phase 3 controllable workspaces. Preserve the distinction between local worktree identity/path and canonical
-      repository identity.
+      Update README current-capability wording only: Argus now includes the Phase 2 local workspace foundation plus
+      Phase 3 read-only repository/worktree discovery and Git/GitHub observation. State clearly that current Phase 3
+      does not perform repository health/attention classification or Git mutation/sync actions and that later
+      environment/provider/task/agent/business capabilities remain out of scope. Preserve loopback/local-data and
+      verification instructions unless current implementation evidence requires a factual correction.
     - >-
-      Use the existing system `git` executable as the local-Git observation mechanism. Only read-only inspection is
-      authorized in TASK-0003: repository/worktree/common-dir identity, full HEAD SHA, symbolic branch or detached
-      state, porcelain dirty state, configured remotes/upstream, and read-only ahead/behind evidence where locally
-      provable. Do not invoke fetch, pull, merge, rebase, checkout/switch, reset, clean, stash, add, commit, push,
-      remote mutation, gc, prune, worktree add/remove, config writes, hooks, or any command that intentionally
-      mutates a discovered repository.
+      Rerun the full TASK-0003 verification boundary after correction: focused no-mutation/source-version tests,
+      complete repository-observation/application/adapter/workspace tests, frozen-lockfile install, repository-owned
+      `pnpm verify`, bounded production loopback smoke on 127.0.0.1 with run-owned temporary Argus data, local hygiene,
+      and exact diff/dependency/secret/forward-scope inspection.
     - >-
-      For a GitHub-hosted remote, normalize common HTTPS/SSH GitHub remote URL forms to owner/repository alias and
-      use the already-installed/authenticated system `gh` CLI as the preferred live GitHub observation capability.
-      Resolve the provider-issued immutable GitHub repository identity plus canonical name/default branch and the
-      current remote ref SHA needed to compare the observed local branch/default branch. GitHub/gh unavailability,
-      missing authentication, unsupported/non-GitHub remotes, deleted repositories, or inaccessible refs must be
-      represented as explicit unavailable/unknown evidence rather than converted to healthy/current data.
-    - >-
-      Do not store or request a GitHub token in Argus. The `gh` subprocess owns its existing authentication
-      mechanics; Argus receives only normalized non-secret command results/status. No credential value may enter
-      SQLite, application logs, UI payloads, audit records, fixtures, exports, or repository artifacts.
-    - >-
-      Add the first EXTERNAL_DERIVED_TRUTH observation persistence needed for repository/Git facts. Every material
-      persisted observation must bind a stable observation ID, canonical source identity, canonical subject identity
-      when known, observation kind/value or explicit absence, observed_at, availability, freshness, source version
-      evidence when available, and provenance sufficient to identify the Git/gh capability that produced it.
-      Existing APP_NATIVE_TRUTH workspace/audit/recovery ownership must remain separate.
-    - >-
-      Use an explicit on-demand refresh freshness policy for this Phase 3 slice: facts acquired successfully in the
-      current scan/refresh are CURRENT for that result; when a later refresh cannot re-observe an external source,
-      retained last-known external values remain visible but are STALE or freshness-UNKNOWN with current availability
-      UNAVAILABLE/UNKNOWN. Argus must not run a background poller or pretend an old persisted GitHub ref is CURRENT.
-    - >-
-      Reconciliation must compare only matching canonical source/subject/observation kinds, retain attributable
-      prior evidence, prefer stronger immutable GitHub/source identity/version evidence, and surface contradictory
-      evidence as CONFLICTED/explicit conflict evidence rather than silently overwriting it. Source failure must not
-      replace the last successful value with fabricated null/fresh data.
-    - >-
-      Persist enough repository-index linkage to reconnect a discovered local worktree path and its workspace to the
-      stronger immutable GitHub repository identity when available. A filesystem path, display name, remote URL,
-      owner/name alias, mutable branch name, or local tracking ref alone must never replace the stronger provider ID
-      as canonical repository identity once that stronger identity is known.
-    - >-
-      Extend the existing local UI minimally so an operator can trigger a workspace repository refresh and inspect
-      discovered repositories. For each observed repository show at least canonical/display identity, local path,
-      worktree/normal classification, current branch or detached state, local HEAD, dirty state, configured GitHub
-      alias/remote when available, live remote/default or relevant branch SHA when available, observation time, and
-      availability/freshness. Show explicit unavailable/unknown/conflict states rather than hiding the repository.
-    - >-
-      Do not derive the Phase 3 product health taxonomy (`HEALTHY`, `LOCAL_BEHIND`, `LOCAL_AHEAD`, `DIVERGED`, etc.)
-      in this task. Raw normalized observations and freshness/availability/conflict evidence are the authorized output;
-      deterministic repository health/attention projection is a separate next Phase 3 task.
-    - >-
-      Add deterministic tests using temporary Git repositories/worktrees and fake/injected process results for
-      GitHub CLI boundaries. Tests must cover normal repository discovery, linked worktree discovery, ordinary
-      directory rejection, symlink-cycle safety, clean/dirty/detached local observation, GitHub identity/ref
-      normalization, unavailable GitHub, stale last-known preservation, and no discovered-repository mutation.
-      Live GitHub may be used only as an additional bounded smoke against Argus itself, never as the sole contract proof.
-    - >-
-      Preserve the existing Node 24/pnpm/Next.js/SQLite stack and repository-owned `pnpm verify`; add no new runtime
-      dependency unless an acceptance criterion is impossible with the standard library, current dependencies,
-      system git, and system gh. Fresh `pnpm install --frozen-lockfile` plus `pnpm verify` must pass.
-    - >-
-      Publish one implementation commit and one canonical TASK-0003 report-only direct child on main, preserve
-      MAIN_ONLY topology exactly {main}, and stop at NEEDS_REVIEW.
+      Publish exactly one correction implementation commit as a direct child of the revision-4 handoff base. Then
+      update only `.agent/tasks/TASK-0003/report.yaml` to TASK-0003 revision 4 / report revision 2 as the report-only
+      direct child, binding the new correction implementation SHA and fresh evidence. Push main, re-resolve final
+      GitHub identity/topology/local cleanliness, and stop at NEEDS_REVIEW. Do not modify review.yaml; Architect owns
+      the next review revision.
   allowed_existing_files_or_components:
-    - app
-    - src
-    - tests
-    - package.json
-    - pnpm-lock.yaml
+    - src/repositories.ts
+    - src/repository-observations.ts
+    - tests/repository-observation.test.ts
     - README.md
-  expected_files_are_restrictive: false
+    - .agent/tasks/TASK-0003/report.yaml
+  expected_files_are_restrictive: true
 
 invariants:
-  - "Revision-3 recovery may adopt only the exact dirty TASK-0003 candidate hash 476dee24be553e5d21e8f572585e8aced435e1eda0fc97f3c99f5519b0e92cb1 over the exact 13 authorized changed paths; mismatch fails closed and no local state is discarded."
-  - "Mutable local Git facts must not be treated as conflicting immutable-version evidence merely because HEAD is unchanged across observations."
-  - "GitHub remote evidence remains canonical for GitHub-hosted repository refs/objects; Argus stores observations/indexes only."
-  - "Local Git/workspace state is operator-owned execution evidence and must never be reset, cleaned, stashed, checked out, fetched, pulled, committed, pushed, or otherwise mutated by TASK-0003."
-  - "Repository identity prefers provider-issued immutable GitHub identity when available; filesystem path and owner/name/URL remain aliases or local metadata."
-  - "Observation availability, freshness, conflict, local Git state, GitHub state, authority, capability, and future health remain distinct facts."
-  - "Every persisted external repository/Git fact has deterministic identity, provenance, observed_at, and explicit availability/freshness semantics."
-  - "Failed refresh preserves attributable last-known evidence but never presents it as freshly observed GitHub truth."
-  - "No secret value is requested from gh, persisted, logged, rendered, exported, or added to repository artifacts."
-  - "Repository discovery/observation must be bounded and must not recursively consume Git internals, dependency/build trees, symlink cycles, or nested directories inside an already-recognized repository working tree."
-  - "TASK-0003 exposes raw normalized repository/Git observations only; repository health/attention and mutation/sync actions remain unimplemented."
-  - "No Phase 4 environment/Keychain/provider-resource behavior, Phase 6 authority projection, agent execution, or business workflow is introduced."
+  - "GitHub remote main remains canonical repository truth and target topology remains exactly {main}."
+  - "The existing Phase 3 repository discovery/observation behavior is preserved; revision 4 is correction-only."
+  - "No production Git observation may intentionally or optionally write index, refs, config, worktree files, remotes, hooks, or other discovered-repository state."
+  - "GIT_OPTIONAL_LOCKS=0 or an equivalent no-optional-write Git mechanism applies to the production observation subprocess boundary, not globally to unrelated operator commands."
+  - "HEAD SHA is source-version evidence for git.head only where it semantically versions the fact; mutable facts remain independently refreshable at unchanged HEAD."
+  - "Generic explicit conflict semantics for truly immutable same-version evidence remain intact."
+  - "No secret value enters Argus persistence, logs, UI, audit, tests, exports, or repository artifacts."
+  - "No health/attention projection, Git sync/mutation action, Phase 4+ feature, dependency, schema expansion, branch, tag, release, workflow, or deployment is introduced."
 
 forbidden_changes:
-  - "Do not create dev, staging, feature, temporary, backup, or review branches."
-  - "Do not modify accepted TASK-0001/TASK-0002 task/report/review artifacts."
-  - "Do not invoke or implement Git fetch/pull/merge/rebase/checkout/switch/reset/clean/stash/add/commit/push/config-write/remote-write/gc/prune or worktree mutation against discovered operator repositories."
-  - "Do not add GitHub/octokit/isomorphic-git/simple-git or another Git/GitHub npm SDK when system git/gh plus narrow project-owned adapters satisfy the task."
-  - "Do not add background polling, filesystem watchers, cron/scheduler, queue/worker, daemon/autostart, plugin registry, generic orchestration, WebSocket/event bus, or cloud service."
-  - "Do not store GitHub credentials or implement Keychain/environment secret management."
-  - "Do not implement repository health/attention classification, safe-sync actions, remote mutation, task/authority projection, providers/resources, SF/client/business features, analytics, templates, or controlled mutations."
-  - "Do not add Docker/Compose, CI/GitHub Actions, Vercel/deployment configuration, release/tag automation, or mutate another repository."
+  - "Do not modify app UI/source, persistence schema, workspace application modules, package.json, pnpm-lock.yaml, accepted TASK-0001/TASK-0002 artifacts, TASK-0003 review.yaml, or any file outside the five explicitly allowed existing files/components."
+  - "Do not add dependencies or new files/directories."
+  - "Do not invoke runtime Git fetch/pull/merge/rebase/checkout/switch/reset/clean/stash/add/commit/push/config-write/remote-write/gc/prune/worktree mutation against discovered operator repositories."
+  - "Do not weaken or remove the production read-only Git allowlist to make the regression pass."
+  - "Do not implement repository health/attention, sync actions, environment/Keychain, providers/resources, task projection, agent integration, business flows, analytics, background polling/watchers, or deployment behavior."
+  - "Do not create branches/tags/releases/workflows or mutate another repository."
 
 gap_policy:
   local_auto_fix: true
   scope_expansion: forbidden
-  architecture_change: revised_contract_required
-  spec_change: revised_contract_required
-  dependency_change: revised_contract_required
-  public_contract_change: revised_contract_required
-  blocking_gap_behavior: AUTHORITY_REQUIRED
+  architecture_change: forbidden
+  spec_change: forbidden
+  dependency_change: forbidden
+  public_contract_change: forbidden
+  blocking_gap_behavior: BLOCKED
 
 structure_policy:
   expected_new_files: []
   unlisted_new_files:
-    allowed: true
-    max: -1
+    allowed: false
+    max: 0
     within: []
-    purpose: "Executor-local files inside the existing single-package repository-discovery, Git/GitHub observation, observation persistence, UI, and test boundary."
+    purpose: ""
   allow_new_top_level_directories: false
   allow_new_shared_modules: false
 
@@ -253,65 +189,46 @@ capability_requirements:
 
 acceptance_criteria:
   - id: AC-1
-    requirement: "Configured workspace roots yield bounded deterministic discovery of local Git repositories and linked worktrees without mutating them."
-    evidence_required: "Fixture/integration tests prove normal repo + .git-file worktree discovery, ordinary directory rejection, nested-repository traversal stop, symlink-cycle safety, stable workspace/path linkage, and byte/ref/config invariance of discovered repositories after scan."
+    requirement: "Production Git observation cannot perform Git's optional index/stat-cache refresh writes."
+    evidence_required: "A causal stale-stat fixture proves the production observation boundary leaves `.git/index` byte-for-byte unchanged; source inspection proves every production Git subprocess uses GIT_OPTIONAL_LOCKS=0 or an exactly equivalent mechanism."
   - id: AC-2
-    requirement: "Local Git observations expose the minimum raw evidence needed for later health derivation."
-    evidence_required: "Tests prove full HEAD SHA, symbolic branch/detached state, dirty status, configured remotes/upstream and read-only ahead/behind evidence where locally available, with explicit unknown states when not provable."
+    requirement: "Local source-version evidence is semantically scoped."
+    evidence_required: "Tests prove git.head stores exact full HEAD SHA as source_version while dirty/remotes/branch/detached/upstream/ahead-behind and mutable local/path facts do not use HEAD as their immutable source version."
   - id: AC-3
-    requirement: "GitHub-hosted repositories resolve stronger canonical source identity and live ref evidence without Argus-owned credentials."
-    evidence_required: "Normalized HTTPS/SSH GitHub remotes resolve via injected/fake gh contract to provider immutable repo ID, canonical alias/default branch and live ref SHA; missing gh/auth/repository/ref/non-GitHub remote returns explicit unavailable/unknown evidence and no credential value is captured."
+    requirement: "Conflict and mutable-refresh semantics remain correct."
+    evidence_required: "Dirty changes at unchanged HEAD refresh normally with conflict NONE, while the existing explicit same-immutable-version contradictory fixture remains CONFLICTED."
   - id: AC-4
-    requirement: "Persisted repository observations satisfy the frozen provenance/freshness model."
-    evidence_required: "SQLite migration/tests prove deterministic observation/source/subject identities, observed_at, value/absence, availability, CURRENT-on-success on-demand freshness, stale/unknown last-known preservation on failed later refresh, provenance/version evidence, and conflict preservation without APP_NATIVE_TRUTH ownership confusion."
+    requirement: "README accurately describes the current implemented phase boundary."
+    evidence_required: "Exact README inspection states Phase 2 foundation plus Phase 3 read-only discovery/observation and explicitly excludes health/attention and Git sync/mutation plus later Phase 4+ surfaces."
   - id: AC-5
-    requirement: "Repository identity remains stable across aliases and local paths."
-    evidence_required: "Tests prove two observations/paths that resolve the same immutable GitHub repo identity link to that canonical repository without making path, URL, display name, branch or owner/name alias the primary identity; stronger identity adoption does not destroy prior provenance."
+    requirement: "The existing Phase 3 slice remains fully verified and scope-stable."
+    evidence_required: "Fresh frozen install, full pnpm verify, production loopback smoke, repository-observation/UI evidence and CHECK-7 scope/secret/dependency inspection PASS with no changes outside the authorized correction files."
   - id: AC-6
-    requirement: "The local UI exposes inspectable raw repository/Git evidence rather than a misleading health score."
-    evidence_required: "Application/UI tests and bounded smoke prove workspace refresh plus repository listing shows local identity/path/type/branch/HEAD/dirty and GitHub/ref observation time/freshness/availability when available, while unavailable/unknown/conflict remains visible and no HEALTHY/BEHIND/AHEAD/DIVERGED projection is introduced."
-  - id: AC-7
-    requirement: "Repository observation is operationally read-only."
-    evidence_required: "Command-boundary tests reject non-allowlisted mutating Git/gh operations; fixture snapshots before/after prove HEAD, refs, index, config, worktree files and remotes unchanged; exact source inspection finds no runtime mutation command path."
-  - id: AC-8
-    requirement: "Phase 3 slice preserves stack simplicity and verification quality."
-    evidence_required: "No unnecessary runtime dependency/service/framework is introduced; fresh frozen-lockfile install and repository-owned pnpm verify PASS, plus bounded loopback smoke on 127.0.0.1."
-  - id: AC-9
-    requirement: "Execution lineage stays exact and Phase 3 scope does not leak forward."
-    evidence_required: "Base-to-implementation diff contains only authorized repository-observation/UI/persistence/test/README changes, report is a report-only direct child, final topology is {main}, and no health/sync/environment/provider/task/agent/business/deployment behavior or external-repository mutation appears."
-
-  - id: AC-10
-    requirement: "Revision-3 recovery preserves exact local-candidate provenance and closes the reproduced mutable-fact reconciliation defect."
-    evidence_required: "Executor preflight proves exact original base, recovery patch SHA-256 and 13-path set before mutation; regression proves dirty/remotes/branch/upstream/ahead-behind changes at unchanged HEAD do not create false CONFLICTED evidence while genuine immutable-version conflict semantics remain intact."
+    requirement: "Correction lineage is exact and reconstructible."
+    evidence_required: "Correction implementation is the sole direct child of exact revision-4 base; report revision 2 is its report-only child; final remote/local main match, topology is {main}, task/report identities are exact, working tree is clean and no unauthorized tag/release/external mutation exists."
 
 verification:
   executor_checks:
-    - id: CHECK-0
-      command_or_check: "Before any implementation mutation, prove local HEAD is the exact revision-3 handoff base, run the exact normative LC_ALL=C recovery-hash script defined in scope, recompute the authorized path set, and require exact match to 476dee24be553e5d21e8f572585e8aced435e1eda0fc97f3c99f5519b0e92cb1 plus the 13 authorized paths. Do not clean/reset/stash/adopt on mismatch."
-      required: true
     - id: CHECK-1
-      command_or_check: "Fresh-preflight exact TASK-0003/base/pinned authority, accepted TASK-0002 review, MAIN_ONLY topology, exact authorized dirty recovery candidate with no unrelated local drift, system git/gh read capability, package/test/build/runtime capability before mutation."
+      command_or_check: "Fresh-preflight exact TASK-0003 revision 4/base/task blob, prior REVISION_REQUIRED review identity, MAIN_ONLY topology, clean synchronized local state and all current execution capabilities before mutation."
       required: true
     - id: CHECK-2
-      command_or_check: "Build isolated temporary repository fixtures including ordinary dirs, normal repos, linked worktrees, dirty/detached states, nested-stop cases and symlink-cycle cases; snapshot HEAD/refs/index/config/files/remotes before observation and prove unchanged afterward."
+      command_or_check: "Reproduce/characterize the stale-stat git-status optional index write in an isolated fixture, then run the production observer after correction and prove exact index/HEAD/refs/config/files/remotes invariance."
       required: true
     - id: CHECK-3
-      command_or_check: "Run deterministic fake/injected GitHub CLI contract tests covering stable repo identity, HTTPS/SSH alias normalization, default/relevant ref SHA, inaccessible/missing gh/auth/non-GitHub cases, and secret-free normalized results."
+      command_or_check: "Run focused source-version/conflict tests proving git.head strong version evidence, mutable facts null/non-immutable version evidence, same-HEAD dirty refresh without false conflict, and preserved genuine immutable conflict behavior."
       required: true
     - id: CHECK-4
-      command_or_check: "Run persistence/reconciliation tests for successful CURRENT observations followed by unavailable refresh retaining last-known STALE/UNKNOWN evidence, conflict preservation, stronger identity adoption and cache/reopen behavior."
+      command_or_check: "Run the complete repository-observation/application/Next-adapter/workspace test suite and inspect README current-phase wording."
       required: true
     - id: CHECK-5
-      command_or_check: "Run UI/application tests for workspace repository refresh/listing and explicit unavailable/unknown/conflict rendering without repository-health classification."
+      command_or_check: "Run fresh pnpm install --frozen-lockfile and pnpm verify with typecheck/all tests/production build PASS, then bounded 127.0.0.1 production smoke using only run-owned temporary Argus data and clean it safely."
       required: true
     - id: CHECK-6
-      command_or_check: "Run fresh pnpm install --frozen-lockfile and pnpm verify with all type/test/build gates PASS, then bounded 127.0.0.1 runtime smoke using only run-owned temporary Argus data."
+      command_or_check: "Inspect exact base-to-correction diff, source subprocess environments, dependencies, secrets, runtime artifacts and forward-scope terms; require only the authorized four implementation/docs files before report publication."
       required: true
     - id: CHECK-7
-      command_or_check: "Inspect exact diff/source/dependencies for discovered-repository mutation commands, credential capture/logging, unnecessary SDK/dependency, runtime artifact leakage, background poller/watcher, health/sync/Phase4+ scope, and unauthorized artifact changes."
-      required: true
-    - id: CHECK-8
-      command_or_check: "Publish exactly one implementation commit and one report-only direct child; re-resolve remote main, report parent/diff, task/report identities, clean local state, zero unauthorized branches/tags and topology exactly {main} before NEEDS_REVIEW."
+      command_or_check: "Publish exactly one correction implementation commit plus one report-revision-2-only child; re-resolve final remote main, parent/diffs, task/report blobs, review preservation, clean local state, zero tags and topology exactly {main}."
       required: true
   authoritative_verification:
     required: false
