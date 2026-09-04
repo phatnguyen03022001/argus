@@ -1,15 +1,15 @@
 protocol_version: 3
 
 task_id: TASK-0003
-task_revision: 3
-review_revision: 1
-state: REVISION_REQUIRED
+task_revision: 4
+review_revision: 2
+state: ACCEPTED
 
 reviewed_report:
   repository: phatnguyen03022001/argus
   path: .agent/tasks/TASK-0003/report.yaml
-  commit: "cc4e07464c6c1815722f5bec1b3805a49aa7f3c8"
-  report_revision: 1
+  commit: "1af6fbe17c63e33c85facd075adf90cc237d032f"
+  report_revision: 2
 
 independence:
   reviewer_role: ARCHITECT
@@ -21,60 +21,63 @@ contract_compliance:
   identity: PASS
   execution_base: PASS
   skill_rules: PASS
-  scope: FAIL
+  scope: PASS
   structure_policy: PASS
   git_authority: PASS
-  acceptance_criteria: FAIL
+  acceptance_criteria: PASS
   verifier_evidence: PASS
 
 gap_disposition:
   - gap_id: GIT_STATUS_OPTIONAL_INDEX_WRITE
-    decision: revise_current_task
+    decision: resolved
     rationale: >-
-      Independent review reproduced a discovered-repository mutation that the implementation tests did not expose.
-      After changing only a tracked file mtime, plain `git status --porcelain=v1 --untracked-files=normal` changed
-      the SHA-256 of `.git/index`, while the same command with `GIT_OPTIONAL_LOCKS=0` left the index unchanged.
-      TASK-0003 requires observation to be operationally read-only and forbids mutation of operator repositories,
-      so AC-7 is not satisfied until every runtime Git observation executes with optional Git writes disabled and a
-      regression proves stale-stat/index cases remain byte-for-byte invariant.
+      TASK-0003 revision 4 applies GIT_OPTIONAL_LOCKS=0 at the sole production system-Git observation boundary.
+      Focused regression evidence proves stale-stat observation leaves the discovered repository index and other
+      guarded Git/worktree bytes unchanged.
   - gap_id: LOCAL_HEAD_SOURCE_VERSION_EVIDENCE
-    decision: revise_current_task
+    decision: resolved
     rationale: >-
-      The false-conflict correction sets sourceVersion=null for every local Git observation. That is appropriate for
-      mutable worktree/config facts, but `git.head` has exact immutable commit SHA evidence available. TASK-0003
-      requires source-version evidence when available and AC-4 requires provenance/version evidence. The correction
-      should assign strong version evidence only to facts for which that version semantically governs the observed
-      value, without reintroducing HEAD as a version for dirty/remotes/branch/upstream/ahead-behind.
+      git.head now retains the exact immutable HEAD SHA as source-version evidence while mutable local facts use no
+      immutable source version, preventing false same-HEAD conflicts without weakening genuine same-version conflict detection.
   - gap_id: README_PHASE3_DISCOVERY_STATE
-    decision: revise_current_task
+    decision: resolved
     rationale: >-
-      The repository entrypoint still presents the current product as Phase-2-only and says Git/GitHub discovery is
-      not performed. After TASK-0003 implementation those statements are materially stale for an operator following
-      the README. Update only the current-capability/phase-boundary wording; do not expand product scope or redesign
-      canonical docs.
+      README now accurately states the implemented Phase 2 foundation plus Phase 3 read-only repository/worktree
+      discovery and Git/GitHub observation boundary and keeps health/sync and Phase 4+ capabilities explicitly out of scope.
 
 follow_up_tasks: []
 
 promotion_readiness:
-  eligible_for_candidate_capture: false
+  eligible_for_candidate_capture: true
   reason: >-
-    The exact report and implementation lineage are reconstructible and most verification is green, but the
-    implementation currently violates the task's no-mutation invariant through Git optional index refresh behavior
-    and leaves two bounded contract/documentation consistency gaps. A corrected TASK-0003 revision must be executed
-    and reviewed before candidate acceptance.
+    The exact revision-4 correction implementation and report lineage are remotely resolved and accepted. Argus is
+    MAIN_ONLY and TASK-0003 grants no separate promotion or release authority; candidate eligibility records accepted
+    lineage only and does not authorize another ref mutation.
 
 notes:
   - >-
-    Architect independently resolved report cc4e07464c6c1815722f5bec1b3805a49aa7f3c8 as the report-only child of
-    implementation abb51da15b6038008dd45f831c8473847d5a9456, whose parent is exact revision-3 base
-    a6063a70b3529b5f50841514b48b9d8692689486; task blob is f9badd4269eed14075ea056251ca638719680e67.
+    Governing Architect independently resolved TASK-0003 revision 4 at task blob
+    1ca2160c5e5d8963ff4a7321c782c50aad81791f, correction implementation
+    b04777170ee5c21783922ea28272863eecf872fb as the sole direct child of exact revision-4 base
+    3b73f9a8dcbd557424d4a5a7137e0cf3609af291, and exact reviewed report commit
+    1af6fbe17c63e33c85facd075adf90cc237d032f as its report-only child.
   - >-
-    Fresh Node 24.19.0 / pnpm 11.24.0 verification independently passed frozen install, typecheck, all 4 test files / 15
-    tests, and Next.js 16.3.3 production build. Those green checks do not override the separately reproduced
-    discovered-repository index-write defect.
+    Architect freshly reran focused repository-observation verification under exact Node 24.19.0 / pnpm 11.24.0:
+    10/10 focused tests passed. Full repository-owned pnpm verify also passed typecheck, all 4 test files / 16 tests,
+    and the Next.js 16.3.3 optimized production build.
   - >-
-    The reproduced mutation is causal: default git status changed an otherwise clean fixture index after only mtime
-    drift; GIT_OPTIONAL_LOCKS=0 prevented the write. This is a runtime side effect, not a theoretical concern.
+    Architect independently started the built application on 127.0.0.1:33427 with a run-owned temporary Argus data
+    directory, received expected Argus content over HTTP, terminated the process, and verified cleanup of the exact
+    temporary review root.
   - >-
-    Revision is bounded to TASK-0003. No health/attention projection, sync action, Phase 4 behavior, new dependency,
-    branch, tag, release, workflow, deployment, or external repository mutation is authorized by this review.
+    Source inspection confirms every production Git observation routed through executeGit receives the inherited
+    environment plus GIT_OPTIONAL_LOCKS=0. git.head alone carries HEAD SHA source-version evidence among local mutable
+    Git facts; dirty/remotes/branch/detached/upstream/ahead-behind remain unversioned for reconciliation.
+  - >-
+    The revision-4 implementation diff contains only README.md, src/repositories.ts,
+    src/repository-observations.ts, and tests/repository-observation.test.ts. The report commit changes only
+    .agent/tasks/TASK-0003/report.yaml. No health/attention projection, Git sync/mutation action, Phase 4+ feature,
+    dependency, schema, branch, tag, release, workflow, deployment, or external-repository mutation is accepted.
+  - >-
+    CHECK-7 post-publication self-reference is satisfied by Architect re-resolution of final main/report lineage,
+    exact task/report blobs, clean local state, zero tags, preserved prior review history in Git, and topology exactly {main}.
