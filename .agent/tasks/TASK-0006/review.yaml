@@ -1,0 +1,74 @@
+protocol_version: 3
+
+task_id: TASK-0006
+task_revision: 1
+review_revision: 1
+state: ACCEPTED
+
+reviewed_report:
+  repository: phatnguyen03022001/argus
+  path: .agent/tasks/TASK-0006/report.yaml
+  commit: "929360753ed636fd33d2e50c647dbd0e44567ee7"
+  report_revision: 1
+
+independence:
+  reviewer_role: ARCHITECT
+  separate_session_from_executor: true
+  exact_report_identity_verified: true
+
+contract_compliance:
+  protocol_version: PASS
+  identity: PASS
+  execution_base: PASS
+  skill_rules: PASS
+  scope: PASS
+  structure_policy: PASS
+  git_authority: PASS
+  acceptance_criteria: PASS
+  verifier_evidence: PASS
+
+gap_disposition: []
+follow_up_tasks: []
+
+promotion_readiness:
+  eligible_for_candidate_capture: true
+  reason: >-
+    The exact TASK-0006 implementation/report lineage is independently verified and accepted. This acceptance adds only
+    Phase 4 credential-reference and macOS Keychain boundary behavior; it grants no provider, environment-materialization,
+    external-mutation, release, deployment, or promotion authority.
+
+notes:
+  - >-
+    Governing Architect binds acceptance to GitHub report commit
+    929360753ed636fd33d2e50c647dbd0e44567ee7, report tree
+    5ef5ea6f0195b516b0e3971681f7c40ebe709028, implementation
+    3e4fd91adbac7878a351afc1d165050627945bd5, implementation tree
+    276469a4a1057b9031c71d5b9f8dc0b50cccbc08, exact base
+    f1677283e62b0f135ed3c9a16554f4b7cb81cad7, and task blob
+    90f1cef8a48544196523dccdf94c1cc18857cdcb.
+  - >-
+    The local execution surface produced contradictory immutable-object views across separate invocations. Acceptance
+    therefore used one consequence-bounded fresh-GitHub review bundle: five repeated remote probes and three independent
+    fresh clones all agreed on the exact report/implementation trees before any review publication.
+  - >-
+    Exact source inspection proves credential records contain only non-secret metadata and lifecycle/version fields;
+    Keychain resolution uses the native /usr/bin/security find-generic-password boundary, exposes secret bytes only to a
+    scoped in-process consumer, zeroes transient buffers in production, returns authority-neutral availability metadata,
+    and has no login-keychain enumeration or fallback secret store.
+  - >-
+    Architect executed the native macOS isolated-Keychain test against a run-owned temporary keychain: all 4 credential
+    tests passed, including create/unlock/add/read/delete cleanup. No operator login-keychain contents were enumerated or
+    mutated.
+  - >-
+    Exact Node 24.19.0 / pnpm 11.24.0 frozen install passed. Full repository-owned verification passed 7 test files / 28
+    tests, typecheck, and Next.js 16.3.3 optimized production build. A bounded production smoke on 127.0.0.1:33434 with
+    run-owned Argus data passed and was cleaned up.
+  - >-
+    Migration/export/restore tests prove schema-2 to schema-3 migration, credential-reference lifecycle/versioning,
+    repository-state preservation, malformed/duplicate/secret-shaped restore rejection, and mechanical runtime-random
+    secret non-leakage across DB/export/audit/UI/results/repository/report surfaces.
+  - >-
+    Base-to-implementation diff is confined to README, existing app/domain/persistence/recovery/UI/test surfaces plus
+    credential reference/Keychain files and route; report commit is report-only. No dependency/lockfile change, provider,
+    .env materialization, cloud secret manager, external mutation, Phase 5+, branch, tag, release, workflow, or deployment
+    is accepted.
