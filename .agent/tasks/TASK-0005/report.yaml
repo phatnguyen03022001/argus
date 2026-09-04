@@ -1,0 +1,196 @@
+protocol_version: 3
+
+task_id: TASK-0005
+task_revision: 1
+report_revision: 1
+state: REPORTED
+
+task_source:
+  path: .agent/tasks/TASK-0005/task.yaml
+  blob: "934ce676c7360d48c709a49d5ad063d83c588a78"
+
+execution:
+  repository: phatnguyen03022001/argus
+  branch:
+    name: main
+    role: canonical
+  authorized_base_head: 4fc09cb96c47833f4fe6da19efbc94202c5038d2
+  pre_execution_head: 4fc09cb96c47833f4fe6da19efbc94202c5038d2
+  final_execution_head: 7ef7095296e776aadf44a1e3e2803700ae2488e7
+
+skill_library:
+  repository: phatnguyen03022001/agent-skills
+  authorized_revision: "4a063c41f429207577434600a3571dc17822cd78"
+  observed_revision: "4a063c41f429207577434600a3571dc17822cd78"
+
+execution_skills_used:
+  required:
+    - executor
+    - simplicity
+    - verification
+  recommended: []
+  external: []
+
+pre_execution_checks:
+  protocol_version_supported: true
+  task_revision_confirmed: true
+  task_identity_confirmed: true
+  accepted_task_0004_review_confirmed: true
+  repository_confirmed: true
+  branch_confirmed: true
+  base_head_confirmed: true
+  remote_main_confirmed: true
+  main_only_topology_confirmed: true
+  zero_tags_confirmed: true
+  skill_revision_confirmed: true
+  required_execution_skills_available: true
+  structure_authority_confirmed: true
+  working_tree_clean: true
+
+capability_preflight:
+  phase: EXECUTION
+  required:
+    - exact_remote_ref_read
+    - repository_content_read
+    - repository_content_write
+    - native_local_execution
+    - filesystem_test_fixture_execution
+    - git_read_observation
+    - github_cli_read_observation
+    - package_install
+    - test_execution
+    - production_build_execution
+    - loopback_runtime_smoke
+    - exact_diff_inspection
+  missing: []
+  passed: true
+
+local_hygiene:
+  result: PASS
+  run_root: /private/tmp/argus-task0005-final-smoke-exzmsxdh
+  cleanup_performed: true
+  retained: []
+  evidence: >-
+    The final production smoke used a run-owned temporary HOME under /private/tmp. The built application bound only to
+    127.0.0.1:33432, returned HTTP 200 with the expected Argus workspace content, created its SQLite database only below
+    that run root, was terminated, and the exact temporary root was removed. An earlier smoke-harness attempt also
+    removed its run-owned temporary root after its argv error and retained no execution artifact.
+
+commits_created:
+  - sha: 7ef7095296e776aadf44a1e3e2803700ae2488e7
+    parent: 4fc09cb96c47833f4fe6da19efbc94202c5038d2
+    message: "Implement canonical GitHub relation sync preview"
+
+pushed: false
+promoted_to_main: false
+
+authoritative_verification:
+  required: false
+  performed: false
+  result: NOT_REQUIRED
+  evidence: "Task authority does not designate an authoritative verifier for this execution phase."
+
+acceptance_evidence:
+  - criterion_id: AC-1
+    status: PASS
+    evidence: >-
+      src/repositories.ts adds one allowlisted read-only GitHub compare observation for the exact observed GitHub SHA and
+      local HEAD SHA. Contract tests prove IDENTICAL, LOCAL_AHEAD, LOCAL_BEHIND, DIVERGED, malformed, unavailable, and
+      identity-mismatched normalization. The compare path is gh api GET-only and no local Git relation mutation is used.
+  - criterion_id: AC-2
+    status: PASS
+    evidence: >-
+      The existing repository_observations model persists github.relation with repository/ref/local-SHA/GitHub-SHA binding,
+      system-gh:api:compare provenance, checked/observed time, availability/freshness, conflict state, and immutable
+      GitHub-SHA...local-SHA sourceVersion. Refresh/reopen coverage proves current persistence and stale last-known retention
+      after GitHub unavailability without any schema migration or parallel truth store.
+  - criterion_id: AC-3
+    status: PASS
+    evidence: >-
+      Repository assessment tests prove a current available non-conflicted exact GitHub relation overrides contradictory
+      local tracking counts while observation conflict remains BLOCKING/UNKNOWN. Existing TASK-0004 fallback behavior is
+      preserved when canonical relation evidence is unavailable or repository metadata is degraded.
+  - criterion_id: AC-4
+    status: PASS
+    evidence: >-
+      Pure safeFastForwardSyncPreview tests prove ELIGIBLE only for clean attached exact LOCAL_BEHIND relation evidence,
+      NOT_NEEDED for exact IDENTICAL/IN_SYNC, and fail-closed BLOCKED or UNKNOWN results for dirty, detached, local-ahead,
+      diverged, stale, unavailable, conflicted, or identity-mismatched evidence. The preview exposes exact expected local
+      pre-HEAD and GitHub target SHA and performs no external side effect.
+  - criterion_id: AC-5
+    status: PASS
+    evidence: >-
+      UI render coverage proves the existing repository observation surface shows canonical relation state, relation
+      evidence/provenance, preview state/reasons, and exact pre/target SHAs while preserving raw local tracking evidence.
+      The rendered control count remains the two pre-existing workspace/repository controls; no synchronization or other
+      mutation control was added.
+  - criterion_id: AC-6
+    status: PASS
+    evidence: >-
+      All repository-owned tests are green, including the pre-existing repository observation/read-only and assessment/UI
+      regressions. Exact implementation audit shows zero package.json, pnpm-lock.yaml, or src/persistence.ts diff; no
+      migration, dependency, secret/Keychain, Git/GitHub write method, synchronization action, Phase 4+, workflow, branch,
+      tag, release, deployment, worker, queue, or background polling surface was introduced.
+  - criterion_id: AC-7
+    status: PENDING_POST_PUBLICATION
+    evidence: >-
+      Fresh pnpm install --frozen-lockfile passed without lockfile changes. Final pnpm verify passed typecheck, 6 Vitest
+      files / 24 tests, and the Next.js 16.3.3 optimized production build. Final bounded production smoke passed on
+      127.0.0.1:33432 with exact run-owned cleanup. Implementation is the sole direct child of the exact task base. This
+      report-only child must now be committed and pushed before final remote/local lineage and topology re-resolution.
+
+executor_checks:
+  - check_id: CHECK-1
+    result: PASS
+    evidence: >-
+      Before mutation, local HEAD, origin/main, and GitHub API main all resolved to
+      4fc09cb96c47833f4fe6da19efbc94202c5038d2; task blob was 934ce676c7360d48c709a49d5ad063d83c588a78;
+      TASK-0004 revision 1 review was ACCEPTED; branch topology was exactly {main}; tags were empty; required execution
+      capabilities and the pinned agent-skills revision were resolved.
+  - check_id: CHECK-2
+    result: PASS
+    evidence: >-
+      tests/repository-observation.test.ts covers exact GitHub compare normalization for identical/ahead/behind/diverged,
+      malformed/unavailable/error behavior, identity mismatch, secret suppression, immutable SHA-pair binding, persistence,
+      reopen, freshness, and conflict semantics.
+  - check_id: CHECK-3
+    result: PASS
+    evidence: >-
+      tests/repository-assessment.test.ts proves current canonical relation preference over stale local tracking counts and
+      the complete safe-sync preview eligibility/blocking matrix with stable reason codes and exact SHA outputs.
+  - check_id: CHECK-4
+    result: PASS
+    evidence: >-
+      tests/repository-assessment-ui.test.tsx proves relation, preview, reasons, provenance, exact SHAs, preserved raw
+      evidence, and absence of any added mutation control.
+  - check_id: CHECK-5
+    result: PASS
+    evidence: >-
+      Node 24.19.0 and pnpm 11.24.0 were used for final verification. pnpm install --frozen-lockfile passed. Final
+      pnpm verify passed 6/6 test files and 24/24 tests, typecheck, and production build. Direct built Next startup on
+      127.0.0.1:33432 returned HTTP 200 with expected content and the exact run-owned data root was removed afterward.
+  - check_id: CHECK-6
+    result: PASS
+    evidence: >-
+      git diff --check passed. Exact base-to-implementation inspection is limited to four existing production files and
+      three existing test files. package.json, pnpm-lock.yaml, and src/persistence.ts are unchanged. Production-source scan
+      and full diff inspection find no Git/GitHub mutation method, dependency/schema/secret surface, enabled sync action,
+      hidden health persistence, background worker/poller, or forward-phase capability.
+  - check_id: CHECK-7
+    result: PENDING_POST_PUBLICATION
+    evidence: >-
+      Implementation 7ef7095296e776aadf44a1e3e2803700ae2488e7 is the direct child of exact base
+      4fc09cb96c47833f4fe6da19efbc94202c5038d2. This report must become its report-only child and be published before
+      final GitHub main, local/origin main, parents/diffs, task/report blobs, zero tags, and {main} topology are re-resolved.
+
+discovered_gaps: []
+structural_observations: []
+deviations_from_task: []
+blockers: []
+
+working_tree_after:
+  clean: false
+  summary: "Only .agent/tasks/TASK-0005/report.yaml remains to be committed as the required report-only child."
+
+result: NEEDS_REVIEW
+review_write: false
