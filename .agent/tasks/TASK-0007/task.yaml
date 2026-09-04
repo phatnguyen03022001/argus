@@ -1,0 +1,178 @@
+protocol_version: 3
+
+task_id: TASK-0007
+task_revision: 1
+state: APPROVED
+
+origin:
+  type: architect_planning
+  milestone: PHASE_4_ENVIRONMENT_AND_SECRETS
+  slice: WORKSPACE_ENVIRONMENT_PROFILES
+
+architect_binding:
+  target_repository: phatnguyen03022001/argus
+
+target:
+  repository: phatnguyen03022001/argus
+  branch:
+    name: main
+    role: canonical
+
+execution_base:
+  mode: handoff_snapshot
+  capture: after_final_planning_commit
+  require_exact_match: true
+
+skill_library:
+  repository: phatnguyen03022001/agent-skills
+  revision: "db03b97b5c42c9c64ad8dce76bc694530e41a206"
+
+execution_skills:
+  required:
+    - executor
+    - simplicity
+    - verification
+
+structure_authority:
+  status: RESOLVED
+  source: >-
+    Extend the existing single-package Next.js/TypeScript + SQLite app-native workspace/configuration surfaces. Keep
+    environment profiles workspace-scoped and internal to Argus. Reuse accepted credential references and Keychain
+    availability boundaries. No new package/service, generic configuration framework, provider framework, plugin system,
+    queue, worker, daemon, or background reconciliation process is authorized.
+
+objective: >-
+  Complete the Phase 4 environment boundary with durable workspace-scoped environment profiles that keep ordinary
+  operator-declared non-secret settings structurally separate from Keychain credential references. Environment identity
+  must be explicit and independent of Git branch/ref identity. Profiles remain Argus-owned configuration metadata; this
+  task does not materialize .env files, resolve secret values into profile data, call provider APIs, or perform external
+  mutations.
+
+scope:
+  required_changes:
+    - >-
+      Add durable EnvironmentProfile APP_NATIVE_TRUTH scoped to one existing workspace with stable Argus ID, stable
+      environment name, optional label, deterministic non-secret settings, credential-reference bindings, lifecycle
+      timestamps, archived state, and optimistic versioning consistent with existing Argus-owned records.
+    - >-
+      Store ordinary settings and credential bindings as distinct structures. A credential binding stores only a binding
+      key plus an existing credential-reference ID. Secret values/tokens/passwords/private keys are structurally absent
+      from environment records, schema, audit, exports, routes, and UI.
+    - >-
+      Environment identity must not be inferred from or coupled to Git branch/default-branch/upstream names. Branch/ref
+      data is neither required nor persisted as environment identity. Duplicate active environment names are rejected
+      within the same workspace but may exist in different workspaces.
+    - >-
+      Non-secret setting keys/values are explicitly ordinary configuration metadata. Reject empty/control-character
+      keys, duplicate keys, unsupported structured values, and keys that explicitly designate credential/secret material
+      such as password/token/secret/private-key/API-key fields; such material must use credential-reference bindings.
+    - >-
+      Validate every credential binding against an active credential reference. Missing/archived references, duplicate
+      binding keys, collision between non-secret setting and credential-binding keys, and stale optimistic versions fail
+      closed without partial writes. Credential availability remains evidence only and never becomes action authority.
+    - >-
+      Provide the smallest create/list/archive lifecycle and existing-UI projection needed to inspect environment name,
+      workspace, non-secret settings, credential binding identities, and credential availability. Do not render or return
+      secret values, secret inputs, reveal/copy controls, or a materialize/apply/sync action.
+    - >-
+      Add the forward SQLite migration plus migration/reopen tests. Extend export/restore so profiles and bindings survive
+      recovery with exact workspace/credential relationships, duplicate validation, optimistic versions, and zero secret
+      reconstruction. Existing Phase 2-4 data remains preserved.
+    - >-
+      Mechanically prove a runtime-random fixture secret never appears in environment/profile rows, SQLite bytes, export,
+      restore/audit payloads, rendered UI/HTTP results, repository diff, or report candidate. Existing isolated native
+      Keychain tests remain green; this task does not touch operator login-keychain contents.
+    - >-
+      Update README only if needed to state the implemented Phase 4 environment-profile boundary truthfully. Keep .env
+      materialization, target-repository environment-schema projection, provider/resource integration, deployment mapping,
+      and controlled external mutation out of scope.
+
+  allowed_existing_files_or_components:
+    - existing app-native persistence/migration/recovery/audit surfaces
+    - existing workspace/application/UI surfaces
+    - accepted credential-reference and Keychain availability surfaces
+    - existing tests and README
+    - .agent/tasks/TASK-0007/report.yaml
+
+invariants:
+  - "Environment is explicit Argus APP_NATIVE_TRUTH and is not a Git branch/ref alias."
+  - "Secret values remain owned only by macOS Keychain; environment profiles persist credential-reference IDs only."
+  - "No .env file, secret-value field, provider call, external mutation, deployment mapping, or Phase 5+ capability is introduced."
+  - "No generic configuration DSL/registry/plugin framework, worker, watcher, queue, daemon, or second source of truth is introduced."
+  - "Topology remains MAIN_ONLY exactly {main}; no tags/releases/workflows/deployment changes."
+
+forbidden_changes:
+  - "Do not persist, log, export, render, audit, or return secret values through environment configuration."
+  - "Do not infer environment from branch names or add branch-to-environment synchronization."
+  - "Do not materialize .env, shell exports, process environment injection, provider SDK/API integration, OAuth, cloud secret managers, or deployment configuration."
+  - "Do not add dependencies, packages, services, generic config engines, provider registries, or background processes."
+
+capability_requirements:
+  EXECUTION:
+    - exact_remote_ref_read
+    - repository_content_read
+    - repository_content_write
+    - native_local_execution
+    - package_install
+    - test_execution
+    - production_build_execution
+    - loopback_runtime_smoke
+    - exact_diff_inspection
+
+acceptance_criteria:
+  - id: AC-1
+    requirement: "Workspace-scoped environment profiles are durable, versioned APP_NATIVE_TRUTH and branch-independent."
+    evidence_required: >-
+      Migration/domain tests prove create/list/archive, workspace-scoped duplicate rules, optimistic version behavior,
+      schema/reopen durability, and absence of Git branch/ref fields or branch-derived identity.
+  - id: AC-2
+    requirement: "Non-secret settings and credential bindings are structurally distinct and fail closed."
+    evidence_required: >-
+      Tests prove deterministic ordinary settings, secret-designating key rejection, binding-to-active-reference validation,
+      collision/duplicate/missing/archived-reference rejection, and atomic failure with no partial profile state.
+  - id: AC-3
+    requirement: "Export/restore preserves exact environment relationships without secret reconstruction."
+    evidence_required: >-
+      Recovery tests prove workspace/profile/binding round-trip, malformed/duplicate/orphan rejection, existing data
+      preservation, and absence of fixture secrets from export/restore/audit content.
+  - id: AC-4
+    requirement: "UI exposes environment configuration metadata and credential availability without secret handling or actions."
+    evidence_required: >-
+      UI/route tests show workspace/name/settings/binding identity/AVAILABLE-or-UNAVAILABLE metadata and prove no secret
+      input/value/reveal/copy/materialize/apply/sync surface.
+  - id: AC-5
+    requirement: "Accepted Phase 2-4 security and observation boundaries remain intact."
+    evidence_required: >-
+      Full regression including native isolated Keychain coverage remains green; runtime-random secret is mechanically
+      absent from DB/export/audit/UI/HTTP/repository/report surfaces; no Git/GitHub/provider/external mutation is added.
+  - id: AC-6
+    requirement: "Implementation remains proportional and publication lineage exact."
+    evidence_required: >-
+      Frozen install, full pnpm verify, production loopback smoke and hygiene pass; exact diff proves no dependency,
+      .env/provider/Phase5+ expansion; implementation is the direct child of exact base and report is report-only child.
+
+verification:
+  executor_checks:
+    - id: CHECK-1
+      command_or_check: "Fresh-preflight exact TASK-0007/base, accepted TASK-0006 review, clean synchronized MAIN_ONLY target and current required EXECUTION capabilities."
+      required: true
+    - id: CHECK-2
+      command_or_check: "Run environment migration/domain/recovery/UI/security scenarios; use focused checks only when they carry distinct causal/acceptance evidence not subsumed by the mandatory full suite."
+      required: true
+    - id: CHECK-3
+      command_or_check: "Run the mandatory full repository verifier and other independent deterministic checks through the smallest safe bounded execution bundle permitted by active agent-skills; keep migrations/publication/final mutation gates serial."
+      required: true
+    - id: CHECK-4
+      command_or_check: "Run bounded 127.0.0.1 production smoke using run-owned temporary Argus data and inspect exact diff/schema/dependencies/secret/forward-scope boundaries."
+      required: true
+    - id: CHECK-5
+      command_or_check: "Publish one implementation commit then one report-only child on main; fresh-resolve canonical remote publication identity after each push, keep zero tags/topology {main}, perform final local hygiene, and stop at NEEDS_REVIEW."
+      required: true
+
+git_authority:
+  create_branch: false
+  commit: true
+  push: true
+  promote_to_main: false
+
+execution_ready: true
