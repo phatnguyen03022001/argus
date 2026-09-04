@@ -1,0 +1,192 @@
+protocol_version: 3
+
+task_id: TASK-0008
+task_revision: 1
+state: APPROVED
+
+origin:
+  type: architect_planning
+  milestone: PHASE_5_PROVIDERS_AND_RESOURCES
+  slice: NEON_PROJECT_OBSERVATION
+
+architect_binding:
+  target_repository: phatnguyen03022001/argus
+
+target:
+  repository: phatnguyen03022001/argus
+  branch:
+    name: main
+    role: canonical
+
+execution_base:
+  mode: handoff_snapshot
+  capture: after_final_planning_commit
+  require_exact_match: true
+
+skill_library:
+  repository: phatnguyen03022001/agent-skills
+  revision: "db03b97b5c42c9c64ad8dce76bc694530e41a206"
+
+execution_skills:
+  required:
+    - executor
+    - simplicity
+    - verification
+
+structure_authority:
+  status: RESOLVED
+  source: >-
+    Add the first source-specific provider observation inside the existing single-package application. Reuse accepted
+    EnvironmentProfile settings/bindings, Keychain secret resolution, external-observation semantics, SQLite durability,
+    and current UI patterns. A small Neon-specific adapter plus the smallest provider-observation persistence/application
+    surface is authorized. No provider registry, generic adapter framework, SDK dependency, plugin system, worker, queue,
+    daemon, scheduler, background reconciliation, or mutation engine is authorized.
+
+objective: >-
+  Begin Phase 5 with read-only Neon project observation driven by an existing workspace EnvironmentProfile. An eligible
+  profile explicitly supplies ordinary non-secret setting NEON_PROJECT_ID and credential binding NEON_API_KEY. Argus uses
+  the Keychain-owned secret only at the narrow HTTP adapter boundary, retrieves the exact Neon project, normalizes stable
+  provider identity and bounded status metadata into EXTERNAL_DERIVED_TRUTH, retains last-known observation with truthful
+  freshness/availability on failure, and exposes the result locally. No Neon resource mutation is authorized.
+
+scope:
+  required_changes:
+    - >-
+      Define one explicit Neon observation configuration contract over existing EnvironmentProfile data: NEON_PROJECT_ID
+      is a required non-secret setting and NEON_API_KEY is a required credential-reference binding. Optional Neon account/
+      organization routing may be added only if the read-only API call materially requires it; do not infer provider
+      configuration from repository branches, arbitrary environment keys, process environment, or secret values.
+    - >-
+      Implement a Neon-specific read adapter using the existing scoped Keychain secret consumer. Use the documented Neon
+      Bearer API and only idempotent GET project observation. No Neon SDK dependency is authorized. Bound network timeout,
+      response size, redirect behavior, accepted content type, and parse/shape validation; never log/return/persist the
+      API key, Authorization header, raw transport diagnostics containing secrets, or connection strings.
+    - >-
+      Observe exactly the configured project ID and reject identity mismatch. Normalize at minimum provider identity
+      `neon`, resource type `project`, provider-issued project ID, safe display name when present, observed-at time,
+      availability, freshness, provenance/source endpoint identity, and bounded source metadata needed to explain the
+      observation. Raw provider response is not canonical Argus data and must not be persisted wholesale.
+    - >-
+      Add the smallest durable provider-observation representation needed for last-known/offline behavior. Successful
+      refresh persists the current normalized observation; missing credential/config, timeout/network/auth/rate-limit,
+      non-2xx response, malformed JSON, unexpected schema, or project-ID mismatch must not overwrite a known-valid prior
+      value. Preserve last-known evidence as stale while current availability truthfully degrades to UNAVAILABLE/UNKNOWN
+      according to existing observation semantics.
+    - >-
+      Make refresh explicit/operator-triggered only. No polling, watcher, scheduled refresh, background process, automatic
+      retry loop, provider mutation, create/update/delete, quota harvesting, billing ledger, or synchronization engine.
+      GET retry behavior may remain single-attempt in this slice; do not invent retry machinery.
+    - >-
+      Surface configured Neon project observation in the existing local UI with environment/workspace identity, project
+      ID, safe project name/status metadata, observed-at, availability/freshness, and an explicit refresh control. The UI
+      must not expose API keys, connection strings, secret values, raw Authorization data, mutation controls, provider
+      console impersonation, or generic provider management.
+    - >-
+      Add deterministic fake HTTP/adapter tests covering success, unavailable/missing credential, 401/403, 404, 429,
+      5xx, timeout/network error, malformed/oversized/non-JSON response, project-ID mismatch, and stale last-known
+      preservation. Prove exact endpoint/method/Authorization construction without recording the secret value in ordinary
+      test output or durable fixtures.
+    - >-
+      Add one bounded live Neon integration check only when an active EnvironmentProfile already contains the required
+      NEON_PROJECT_ID plus NEON_API_KEY credential binding and current Keychain resolution succeeds. The check is read-only
+      GET and must not enumerate unrelated projects/resources. Absence of such operator configuration is NOT a task blocker;
+      deterministic contract tests remain the acceptance authority for this slice. Never create or ask for a new Neon key.
+    - >-
+      Mechanically prove a runtime-random fixture API key is absent from SQLite bytes/logical rows, normalized observations,
+      export/restore if provider observations are included there, audit, UI/HTTP results, errors, repository diff, and
+      report candidate. Existing Phase 2-4 Keychain/environment/repository boundaries remain green.
+    - >-
+      Update README only as needed to state the exact Neon read-only observation capability and its explicit profile keys.
+      Do not claim support for Neon branches/endpoints/databases, other providers, provider mutation, deployment control,
+      cost/quota management, or Phase 6+ capabilities.
+
+  allowed_existing_files_or_components:
+    - existing EnvironmentProfile and credential/Keychain components
+    - existing persistence/recovery/observation/application/UI components
+    - one Neon-specific adapter/component
+    - existing tests and README
+    - .agent/tasks/TASK-0008/report.yaml
+
+invariants:
+  - "Neon remains canonical owner of Neon project/resource truth; Argus stores only normalized derived observations and app-native configuration references."
+  - "NEON_API_KEY remains a Keychain-owned secret and never enters ordinary Argus persistence, export, audit, logs, UI, HTTP results, repository artifacts, or report evidence."
+  - "Provider/resource identity uses provider-issued project ID; display name or environment setting is not stronger identity."
+  - "Refresh is explicit and read-only; no provider mutation, polling, retries framework, scheduler, worker, queue, daemon, or background reconciliation."
+  - "No generic provider registry/framework, SDK dependency, other provider support, branch/endpoint/database inventory, quota ledger, or Phase 6+ expansion."
+  - "Topology remains MAIN_ONLY exactly {main}; no tags/releases/workflows/deployment changes."
+
+forbidden_changes:
+  - "Do not call Neon POST/PATCH/PUT/DELETE or any endpoint that creates, updates, deletes, recovers, starts/stops, or otherwise mutates provider state."
+  - "Do not list all Neon projects as the normal observation path; observe only the exact configured project ID."
+  - "Do not persist raw provider responses, Authorization headers, connection strings, database credentials, or secret-shaped fields."
+  - "Do not add a Neon SDK, generic ProviderManager/registry/plugin abstraction, background refresh, quota database, billing subsystem, or mutation controls."
+
+capability_requirements:
+  EXECUTION:
+    - exact_remote_ref_read
+    - repository_content_read
+    - repository_content_write
+    - native_local_execution
+    - package_install
+    - test_execution
+    - production_build_execution
+    - loopback_runtime_smoke
+    - exact_diff_inspection
+
+acceptance_criteria:
+  - id: AC-1
+    requirement: "Exact EnvironmentProfile configuration resolves one Neon project target without secret or branch inference."
+    evidence_required: >-
+      Tests prove required NEON_PROJECT_ID plus NEON_API_KEY binding, exact provider project identity, missing/archived/
+      malformed config rejection, and no process-env/branch inference.
+  - id: AC-2
+    requirement: "Neon HTTP observation is read-only, bounded, secret-safe, and identity validating."
+    evidence_required: >-
+      Adapter tests prove GET-only exact-project request, bounded timeout/response handling, Bearer construction at the
+      secret boundary, safe error normalization, project-ID mismatch rejection, and zero secret/raw-header leakage.
+  - id: AC-3
+    requirement: "Provider observation preserves truthful current and last-known semantics."
+    evidence_required: >-
+      Persistence/application tests prove normalized project observation identity/provenance, current success, stale
+      last-known retention after unavailable/malformed/auth/rate-limit/network failure, and no overwrite by failed refresh.
+  - id: AC-4
+    requirement: "UI provides explicit Neon refresh/inspection without provider mutation or secret disclosure."
+    evidence_required: >-
+      UI/route tests prove environment/workspace/project identity, availability/freshness/observed-at display and refresh
+      action while proving no mutation control, connection string, API key, secret value, generic provider manager, or polling.
+  - id: AC-5
+    requirement: "Security and prior-phase boundaries remain intact."
+    evidence_required: >-
+      Runtime-random API-key non-leak proof passes across durable/observable surfaces; Phase 2-4 repository, environment,
+      recovery and isolated Keychain tests remain green; no dependency or provider-mutation surface appears.
+  - id: AC-6
+    requirement: "Implementation remains proportional and publication lineage exact."
+    evidence_required: >-
+      Frozen install, full pnpm verify, bounded loopback smoke, exact diff/dependency/secret/forward-scope inspection,
+      implementation direct child plus report-only child, fresh remote proof, zero tags/topology {main}, clean local hygiene.
+
+verification:
+  executor_checks:
+    - id: CHECK-1
+      command_or_check: "Fresh-preflight exact TASK-0008/base, accepted TASK-0007 review, active agent-skills pin, clean synchronized MAIN_ONLY target, and required current EXECUTION capabilities."
+      required: true
+    - id: CHECK-2
+      command_or_check: "Run Neon configuration/adapter/observation/UI/security scenarios with deterministic local HTTP fakes; live Neon GET is conditional only on already-configured operator profile+Keychain state and is otherwise omitted truthfully."
+      required: true
+    - id: CHECK-3
+      command_or_check: "Run mandatory full repository verifier plus independent deterministic diff/schema/secret checks through the smallest safe bounded execution bundle; keep network integration and publication serial."
+      required: true
+    - id: CHECK-4
+      command_or_check: "Run bounded 127.0.0.1 production smoke with run-owned temporary Argus data; inspect exact implementation for GET-only Neon surface, no SDK/dependency/provider framework, no raw response persistence, no polling/mutation/Phase6+."
+      required: true
+    - id: CHECK-5
+      command_or_check: "Publish one implementation commit then one report-only child on main; fresh-resolve canonical remote identity after each push, keep zero tags/topology {main}, perform final local hygiene, and stop at NEEDS_REVIEW."
+      required: true
+
+git_authority:
+  create_branch: false
+  commit: true
+  push: true
+  promote_to_main: false
+
+execution_ready: true
