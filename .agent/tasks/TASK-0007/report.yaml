@@ -1,0 +1,147 @@
+protocol_version: 3
+
+task_id: TASK-0007
+task_revision: 1
+report_revision: 1
+state: REPORTED
+
+task_source:
+  path: .agent/tasks/TASK-0007/task.yaml
+  blob: "73bc9b737efc8e0d911bea40e6cce53a397272e8"
+
+execution:
+  repository: phatnguyen03022001/argus
+  branch:
+    name: main
+    role: canonical
+  authorized_base_head: "5039dbfb62945b2ebe654717066b04f484ba09ea"
+  final_execution_head: "e12fc58d57009d7d7a04890e56d93608a0e762f0"
+
+skill_library:
+  repository: phatnguyen03022001/agent-skills
+  authorized_revision: "db03b97b5c42c9c64ad8dce76bc694530e41a206"
+
+capability_preflight:
+  phase: EXECUTION
+  required:
+    - exact_remote_ref_read
+    - repository_content_read
+    - repository_content_write
+    - native_local_execution
+    - package_install
+    - test_execution
+    - production_build_execution
+    - loopback_runtime_smoke
+    - exact_diff_inspection
+  available:
+    - exact_remote_ref_read
+    - repository_content_read
+    - repository_content_write
+    - native_local_execution
+    - package_install
+    - test_execution
+    - production_build_execution
+    - loopback_runtime_smoke
+    - exact_diff_inspection
+  missing: []
+  passed: true
+
+local_hygiene:
+  result: PASS
+  run_root: /private/tmp/argus-task0007-smoke-final.C9kvWv
+  cleanup_performed: true
+  retained: []
+  evidence: >-
+    Final production smoke ran the built Next.js application with run-owned HOME/data on 127.0.0.1:33437,
+    returned HTTP 200 with the environment-profile UI and no password/reveal/materialize/apply/sync surface,
+    terminated the process, canonicalized /tmp to /private/tmp before deletion, proved the exact root was outside
+    repository/operator-home safety boundaries, and removed it completely. No run-owned execution artifact remains.
+
+authoritative_verification:
+  required: false
+  performed: false
+  result: NOT_REQUIRED
+  evidence: "TASK-0007 designates repository-native deterministic verification; no separate authoritative verifier is required."
+
+pushed: true
+
+acceptance_evidence:
+  - criterion_id: AC-1
+    status: PASS
+    evidence: >-
+      Schema version 4 adds workspace-scoped environment_profiles, environment_settings, and
+      environment_credential_bindings with stable UUID profile identity, explicit environment name, timestamps,
+      archive state, optimistic version, and active-name uniqueness per workspace. Migration/reopen and domain tests
+      prove create/list/archive, same-workspace duplicate rejection, cross-workspace name reuse, stale-version rejection,
+      and exact profile columns with no branch/ref identity field.
+  - criterion_id: AC-2
+    status: PASS
+    evidence: >-
+      Domain tests prove deterministic scalar settings and credential bindings are separate structures; empty/control
+      keys, structured values, secret-designating keys, duplicate/colliding keys, missing/archived credential references,
+      and stale versions fail closed without partial profile writes. Active environment bindings prevent credential
+      archival, preserving the invariant that every active binding resolves only to an active credential reference.
+  - criterion_id: AC-3
+    status: PASS
+    evidence: >-
+      Export/restore now round-trips environment profiles, settings, workspace relationships, credential-reference
+      bindings, archive/version state, and existing repository/credential data. Recovery tests reject orphan workspace or
+      credential relationships, duplicate active environment names, active bindings to archived credentials,
+      secret-designating settings, secret-shaped fields, and malformed state before transactional replacement.
+  - criterion_id: AC-4
+    status: PASS
+    evidence: >-
+      The existing loopback UI and /environments POST route expose workspace, explicit environment name, ordinary
+      settings, credential-reference IDs, AVAILABLE/UNAVAILABLE evidence, version, create, and archive only. Route/UI
+      tests prove no secret input/value/reveal/copy/materialize/apply/sync action is rendered or returned.
+  - criterion_id: AC-5
+    status: PASS
+    evidence: >-
+      Final pnpm verify passes 8/8 test files and 32/32 tests, including the existing isolated native macOS Keychain
+      coverage and repository observation/assessment regressions. The focused environment security test uses one
+      runtime-random fixture secret and mechanically proves it absent from environment logical rows, raw SQLite bytes,
+      export/audit data, rendered UI, HTTP response data, repository diff, and this report candidate.
+  - criterion_id: AC-6
+    status: NOT_PROVEN
+    evidence: >-
+      Pre-publication evidence is complete: pnpm install --frozen-lockfile passed with package.json and pnpm-lock.yaml
+      unchanged; final pnpm verify passed TypeScript, 32/32 tests, and the Next.js 16.3.3 production build on Node
+      24.19.0/pnpm 11.24.0; final loopback smoke and cleanup passed; git diff --check and scope inspection passed with no
+      dependency, .env/provider/Phase5+/background-process expansion. Implementation e12fc58d57009d7d7a04890e56d93608a0e762f0
+      is independently resolved on remote main and is the sole direct child of the exact base. This artifact deliberately
+      does not self-attest its own report-child commit or remote visibility; that consequence is verified after publication.
+
+executor_checks:
+  - check_id: CHECK-1
+    result: PASS
+    evidence: >-
+      Before mutation, local main and fresh canonical remote main both equaled exact base
+      5039dbfb62945b2ebe654717066b04f484ba09ea; TASK-0006 review was ACCEPTED; topology was exactly {main}; tags were
+      empty; working tree/index were clean; pinned agent-skills db03b97b5c42c9c64ad8dce76bc694530e41a206 and every
+      required EXECUTION capability were resolved.
+  - check_id: CHECK-2
+    result: PASS
+    evidence: >-
+      Focused environment tests were executed red-green for migration/domain/recovery/UI/security behavior, including
+      API-key-shaped restore rejection and active-environment credential-lifecycle integrity, then passed 4/4.
+  - check_id: CHECK-3
+    result: PASS
+    evidence: >-
+      Final repository verifier passed on Node 24.19.0/pnpm 11.24.0: TypeScript PASS, Vitest 8/8 files and 32/32 tests
+      PASS, and optimized Next.js 16.3.3 production build PASS.
+  - check_id: CHECK-4
+    result: PASS
+    evidence: >-
+      Final built-app smoke bound only to 127.0.0.1:33437 with run-owned Argus data, returned HTTP 200 with expected
+      environment-profile content, exposed no forbidden secret/action controls, and completed exact safe cleanup.
+      Immutable implementation diff inspection passes git diff --check, changes no dependency/lock file, stores no
+      branch/ref environment identity, and adds no .env/provider/external mutation/worker/queue/daemon capability.
+  - check_id: CHECK-5
+    result: NOT_PROVEN
+    evidence: >-
+      Implementation publication is proven independently at remote main=e12fc58d57009d7d7a04890e56d93608a0e762f0 and its
+      parent is exact base 5039dbfb62945b2ebe654717066b04f484ba09ea. Per the implementation-report contract, this
+      report does not predict or self-claim the publication of the commit that will contain it; final remote report-child,
+      zero-tag/{main} topology, local-origin equality, and clean hygiene are resolved after that push.
+
+result: NEEDS_REVIEW
