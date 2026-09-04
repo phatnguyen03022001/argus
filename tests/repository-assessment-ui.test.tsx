@@ -87,3 +87,40 @@ test("Needs attention is severity ordered while raw repository evidence remains 
   expect(markup.slice(rawStart)).toContain("GitHub ref");
   expect(markup.slice(rawStart)).toContain("2026-09-04T08:00:00.000Z");
 });
+
+test("repository UI surfaces canonical relation and safe-sync preview with exact SHAs without adding a mutation control", () => {
+  const remoteSha = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+  const behind = repository({ worktreeId: "behind", localPath: "/behind", identity: "github:4242" });
+  behind.local.aheadBehind = { ahead: 5, behind: 0 };
+  behind.github.refSha = remoteSha;
+  behind.github.relation = {
+    relation: "LOCAL_BEHIND",
+    repositoryAlias: "Acme/Widgets",
+    refName: "main",
+    localSha: SHA,
+    githubSha: remoteSha,
+    availability: "AVAILABLE",
+    freshness: "CURRENT",
+    observedAt: "2026-09-04T08:01:00.000Z",
+    checkedAt: "2026-09-04T08:01:00.000Z",
+    conflictState: "NONE",
+    sourceVersion: `${remoteSha}...${SHA}`,
+    provenance: "system-gh:api:compare",
+  };
+
+  const markup = renderToStaticMarkup(WorkspaceHome({
+    workspaces: [{ id: "workspace:1", label: "Repositories", rootPath: "/workspace", createdAt: "2026-09-04T08:00:00.000Z", updatedAt: "2026-09-04T08:00:00.000Z", archivedAt: null, version: 1 }],
+    repositories: [behind],
+  }));
+
+  expect(markup).toContain("GitHub relation");
+  expect(markup).toContain("LOCAL_BEHIND");
+  expect(markup).toContain("Safe sync preview");
+  expect(markup).toContain("ELIGIBLE");
+  expect(markup).toContain("Expected local pre-HEAD");
+  expect(markup).toContain("Expected GitHub target SHA");
+  expect(markup).toContain(SHA);
+  expect(markup).toContain(remoteSha);
+  expect(markup).toContain("system-gh:api:compare");
+  expect((markup.match(/<button/g) ?? []).length).toBe(2);
+});

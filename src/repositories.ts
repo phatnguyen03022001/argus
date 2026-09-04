@@ -225,8 +225,24 @@ export interface GitHubRemoteObservation {
   provenance: "system-gh:api";
 }
 
+export type GitHubCommitRelation = "IDENTICAL" | "LOCAL_AHEAD" | "LOCAL_BEHIND" | "DIVERGED" | "UNKNOWN";
+
+export interface GitHubCommitRelationEvidence {
+  relation: GitHubCommitRelation;
+  repositoryAlias: string | null;
+  refName: string | null;
+  localSha: string | null;
+  githubSha: string | null;
+  availability: EvidenceAvailability;
+  freshness: EvidenceFreshness;
+  reason: string | null;
+  provenance: "system-gh:api:compare";
+  sourceVersion: string | null;
+}
+
 const GITHUB_REPOSITORY_JQ = "[.id,.full_name,.default_branch] | @tsv";
 const GITHUB_REF_JQ = ".object.sha";
+const GITHUB_COMPARE_JQ = ".status";
 
 function githubAliasFromParts(owner: string, repository: string): string | null {
   const safePart = /^[A-Za-z0-9_.-]+$/;
@@ -263,9 +279,12 @@ function systemProcessRunner(command: string, args: string[], cwd?: string): Com
 
 function ghObservationArgsAllowed(args: string[]): boolean {
   if (args.length !== 4 || args[0] !== "api" || args[2] !== "--jq") return false;
-  if (args[3] !== GITHUB_REPOSITORY_JQ && args[3] !== GITHUB_REF_JQ) return false;
   const resource = args[1] ?? "";
-  return /^repos\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(?:\/git\/ref\/heads\/[A-Za-z0-9%_.-]+)?$/.test(resource);
+  if (args[3] === GITHUB_REPOSITORY_JQ || args[3] === GITHUB_REF_JQ) {
+    return /^repos\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+(?:\/git\/ref\/heads\/[A-Za-z0-9%_.-]+)?$/.test(resource);
+  }
+  return args[3] === GITHUB_COMPARE_JQ
+    && /^repos\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/compare\/[0-9a-fA-F]{40}\.\.\.[0-9a-fA-F]{40}$/.test(resource);
 }
 
 export function runReadOnlyGh(
@@ -306,6 +325,66 @@ function unavailableGitHubObservation(
       reason,
     },
     provenance: "system-gh:api",
+  };
+}
+
+export function observeGitHubCommitRelation(input: {
+  alias: string | null;
+  canonicalAlias: string | null;
+  refName: string | null;
+  localSha: string | null;
+  githubSha: string | null;
+  runner?: ProcessRunner;
+}): GitHubCommitRelationEvidence {
+  const sourceVersion = input.localSha && input.githubSha
+    ? `${input.githubSha}...${input.localSha}`
+    : null;
+  const unavailable = (availability: EvidenceAvailability, reason: string): GitHubCommitRelationEvidence => ({
+    relation: "UNKNOWN",
+    repositoryAlias: input.canonicalAlias ?? input.alias,
+    refName: input.refName,
+    localSha: input.localSha,
+    githubSha: input.githubSha,
+    availability,
+    freshness: "UNKNOWN",
+    reason,
+    provenance: "system-gh:api:compare",
+    sourceVersion,
+  });
+
+  if (!input.alias) return unavailable("UNKNOWN", "github-identity-unavailable");
+  if (!input.canonicalAlias) return unavailable("UNAVAILABLE", "github-identity-unavailable");
+  if (input.alias.toLowerCase() !== input.canonicalAlias.toLowerCase()) {
+    return unavailable("UNAVAILABLE", "github-identity-mismatch");
+  }
+  if (!input.refName) return unavailable("UNKNOWN", "github-ref-unavailable");
+  if (!input.localSha || !/^[0-9a-f]{40}$/i.test(input.localSha)) return unavailable("UNKNOWN", "local-head-unavailable");
+  if (!input.githubSha || !/^[0-9a-f]{40}$/i.test(input.githubSha)) return unavailable("UNKNOWN", "github-ref-unavailable");
+
+  const result = runReadOnlyGh(
+    ["api", `repos/${input.alias}/compare/${input.githubSha}...${input.localSha}`, "--jq", GITHUB_COMPARE_JQ],
+    input.runner ?? systemProcessRunner,
+  );
+  if (!result.ok) return unavailable("UNAVAILABLE", result.reason ?? "gh-api-unavailable");
+  const relation = ({
+    identical: "IDENTICAL",
+    ahead: "LOCAL_AHEAD",
+    behind: "LOCAL_BEHIND",
+    diverged: "DIVERGED",
+  } as const)[result.stdout as "identical" | "ahead" | "behind" | "diverged"];
+  if (!relation) return unavailable("UNAVAILABLE", "gh-compare-response-invalid");
+
+  return {
+    relation,
+    repositoryAlias: input.canonicalAlias,
+    refName: input.refName,
+    localSha: input.localSha,
+    githubSha: input.githubSha,
+    availability: "AVAILABLE",
+    freshness: "CURRENT",
+    reason: null,
+    provenance: "system-gh:api:compare",
+    sourceVersion,
   };
 }
 

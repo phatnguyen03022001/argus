@@ -258,6 +258,9 @@ test("repository refresh adopts immutable GitHub identity, persists current evid
         : "1111111111111111111111111111111111111111";
       return { status: 0, stdout: `${sha}\n`, stderr: "" };
     }
+    if (String(args[1]).includes("/compare/")) {
+      return { status: 0, stdout: "behind\n", stderr: "" };
+    }
     return { status: 1, stdout: "", stderr: "unexpected" };
   };
 
@@ -289,6 +292,12 @@ test("repository refresh adopts immutable GitHub identity, persists current evid
     "1111111111111111111111111111111111111111",
     "2222222222222222222222222222222222222222",
   ]);
+  expect(current.every((entry) => entry.github.relation!.relation === "LOCAL_BEHIND")).toBe(true);
+  expect(current.every((entry) => entry.github.relation!.availability === "AVAILABLE")).toBe(true);
+  expect(current.every((entry) => entry.github.relation!.freshness === "CURRENT")).toBe(true);
+  expect(current.every((entry) => entry.github.relation!.localSha === entry.local.head)).toBe(true);
+  expect(current.every((entry) => entry.github.relation!.githubSha === entry.github.refSha)).toBe(true);
+  expect(current.every((entry) => entry.github.relation!.sourceVersion === `${entry.github.refSha}...${entry.local.head}`)).toBe(true);
   store.close();
 
   const reopened = api.openStore({ dataRoot });
@@ -308,6 +317,10 @@ test("repository refresh adopts immutable GitHub identity, persists current evid
     "1111111111111111111111111111111111111111",
     "2222222222222222222222222222222222222222",
   ]);
+  expect(stale.every((entry) => entry.github.relation!.relation === "LOCAL_BEHIND")).toBe(true);
+  expect(stale.every((entry) => entry.github.relation!.availability === "UNAVAILABLE")).toBe(true);
+  expect(stale.every((entry) => entry.github.relation!.freshness === "STALE")).toBe(true);
+  expect(stale.every((entry) => entry.github.relation!.checkedAt === "2026-09-03T07:02:00.000Z")).toBe(true);
   reopened.close();
 });
 
@@ -474,4 +487,79 @@ test("mutable local facts refresh normally at the same HEAD instead of becoming 
   expect(latestDirty.source_version).toBeNull();
   expect(latestDirty.conflict_state).toBe("NONE");
   store.close();
+});
+
+test("GitHub commit relation normalizes exact compare semantics and fails closed on malformed, unavailable, or identity-mismatched evidence", async () => {
+  const api = await import("../src/workspace-store");
+  const localSha = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+  const githubSha = "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb";
+  const cases = [
+    ["identical", "IDENTICAL"],
+    ["ahead", "LOCAL_AHEAD"],
+    ["behind", "LOCAL_BEHIND"],
+    ["diverged", "DIVERGED"],
+  ] as const;
+
+  for (const [status, expected] of cases) {
+    const calls: string[][] = [];
+    const observed = api.observeGitHubCommitRelation({
+      alias: "acme/widgets",
+      canonicalAlias: "Acme/Widgets",
+      refName: "main",
+      localSha,
+      githubSha,
+      runner: (command: string, args: string[]) => {
+        calls.push([command, ...args]);
+        return { status: 0, stdout: `${status}\n`, stderr: "" };
+      },
+    });
+    expect(observed).toMatchObject({
+      relation: expected,
+      repositoryAlias: "Acme/Widgets",
+      refName: "main",
+      localSha,
+      githubSha,
+      availability: "AVAILABLE",
+      freshness: "CURRENT",
+      provenance: "system-gh:api:compare",
+    });
+    expect(observed.sourceVersion).toBe(`${githubSha}...${localSha}`);
+    expect(calls).toEqual([["gh", "api", `repos/acme/widgets/compare/${githubSha}...${localSha}`, "--jq", ".status"]]);
+  }
+
+  const malformed = api.observeGitHubCommitRelation({
+    alias: "acme/widgets",
+    canonicalAlias: "Acme/Widgets",
+    refName: "main",
+    localSha,
+    githubSha,
+    runner: () => ({ status: 0, stdout: "sideways\n", stderr: "" }),
+  });
+  expect(malformed).toMatchObject({ relation: "UNKNOWN", availability: "UNAVAILABLE", freshness: "UNKNOWN", reason: "gh-compare-response-invalid" });
+
+  const unavailable = api.observeGitHubCommitRelation({
+    alias: "acme/widgets",
+    canonicalAlias: "Acme/Widgets",
+    refName: "main",
+    localSha,
+    githubSha,
+    runner: () => ({ status: 1, stdout: "", stderr: "SECRET_SENTINEL" }),
+  });
+  expect(unavailable).toMatchObject({ relation: "UNKNOWN", availability: "UNAVAILABLE", freshness: "UNKNOWN", reason: "gh-api-unavailable" });
+  expect(JSON.stringify(unavailable)).not.toContain("SECRET_SENTINEL");
+
+  let mismatchCalls = 0;
+  const mismatch = api.observeGitHubCommitRelation({
+    alias: "acme/widgets",
+    canonicalAlias: "other/widgets",
+    refName: "main",
+    localSha,
+    githubSha,
+    runner: () => {
+      mismatchCalls += 1;
+      return { status: 0, stdout: "identical\n", stderr: "" };
+    },
+  });
+  expect(mismatch).toMatchObject({ relation: "UNKNOWN", availability: "UNAVAILABLE", freshness: "UNKNOWN", reason: "github-identity-mismatch" });
+  expect(mismatchCalls).toBe(0);
 });

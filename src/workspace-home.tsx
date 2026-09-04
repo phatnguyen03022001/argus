@@ -1,4 +1,4 @@
-import { assessRepository, repositoryReasonText, sortRepositoryAssessments } from "./repository-assessment";
+import { assessRepository, repositoryReasonText, safeFastForwardSyncPreview, sortRepositoryAssessments } from "./repository-assessment";
 import type { RepositoryView } from "./repository-observations";
 import type { WorkspaceRecord } from "./workspaces";
 
@@ -121,6 +121,8 @@ export function WorkspaceHome({
               const tracking = repository.local.aheadBehind
                 ? `ahead=${repository.local.aheadBehind.ahead} behind=${repository.local.aheadBehind.behind}`
                 : "not locally provable";
+              const relation = repository.github.relation;
+              const preview = safeFastForwardSyncPreview(repository);
               return (
                 <li key={repository.worktreeId} className="repository-row">
                   <div className="repository-title">
@@ -147,6 +149,17 @@ export function WorkspaceHome({
                     <div><dt>GitHub default branch</dt><dd>{repository.github.defaultBranch ?? "unknown"}</dd></div>
                     <div><dt>GitHub ref</dt><dd>{repository.github.refName ?? "unknown"}</dd></div>
                     <div><dt>Remote ref SHA</dt><dd><code>{repository.github.refSha ?? "unknown"}</code></dd></div>
+                    <div><dt>GitHub relation</dt><dd>{relation?.relation ?? "UNKNOWN"}</dd></div>
+                    <div><dt>Relation repository</dt><dd>{relation?.repositoryAlias ?? "unknown"}</dd></div>
+                    <div><dt>Relation ref</dt><dd>{relation?.refName ?? "unknown"}</dd></div>
+                    <div><dt>Relation local SHA</dt><dd><code>{relation?.localSha ?? "unknown"}</code></dd></div>
+                    <div><dt>Relation GitHub SHA</dt><dd><code>{relation?.githubSha ?? "unknown"}</code></dd></div>
+                    <div><dt>Relation source version</dt><dd><code>{relation?.sourceVersion ?? "unknown"}</code></dd></div>
+                    <div><dt>Relation provenance</dt><dd>{relation?.provenance ?? "unknown"}</dd></div>
+                    <div><dt>Safe sync preview</dt><dd>{preview.state}</dd></div>
+                    <div><dt>Preview reasons</dt><dd>{preview.reasons.join(", ") || "none"}</dd></div>
+                    <div><dt>Expected local pre-HEAD</dt><dd><code>{preview.expectedLocalPreHead ?? "unknown"}</code></dd></div>
+                    <div><dt>Expected GitHub target SHA</dt><dd><code>{preview.expectedGitHubTargetSha ?? "unknown"}</code></dd></div>
                   </dl>
 
                   {assessment.reasons.length ? (
@@ -172,6 +185,11 @@ export function WorkspaceHome({
                       <small>GITHUB REF</small>
                       <strong>{evidenceStatus(repository.github.refAvailability, repository.github.refFreshness, repository.github.refConflictState)}</strong>
                       <span>{observationTime(repository.github.refObservedAt, repository.github.refCheckedAt)}</span>
+                    </div>
+                    <div>
+                      <small>GITHUB RELATION</small>
+                      <strong>{relation ? evidenceStatus(relation.availability, relation.freshness, relation.conflictState) : "UNKNOWN · UNKNOWN"}</strong>
+                      <span>{relation ? observationTime(relation.observedAt, relation.checkedAt) : "not observed"}</span>
                     </div>
                   </div>
                 </li>

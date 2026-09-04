@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { assessRepository, sortRepositoryAssessments, type RepositoryAssessment } from "../src/repository-assessment";
+import { assessRepository, safeFastForwardSyncPreview, sortRepositoryAssessments, type RepositoryAssessment } from "../src/repository-assessment";
 import type { RepositoryView } from "../src/repository-observations";
 
 const A = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
@@ -142,4 +142,103 @@ test("repository assessment carries inspectable evidence summary and determinist
   expect(sortRepositoryAssessments([healthy, actionB, actionA, blocking]).map((item) => item.identity.localPath)).toEqual([
     "/c", "/a", "/b", "/z",
   ]);
+});
+
+
+function repositoryWithRelation(
+  relation: "IDENTICAL" | "LOCAL_AHEAD" | "LOCAL_BEHIND" | "DIVERGED" | "UNKNOWN",
+  overrides: Partial<RepositoryView> = {},
+): RepositoryView {
+  const input = repository(overrides);
+  input.github.relation = {
+    relation,
+    repositoryAlias: input.github.canonicalAlias,
+    refName: input.github.refName,
+    localSha: input.local.head,
+    githubSha: input.github.refSha,
+    availability: "AVAILABLE",
+    freshness: "CURRENT",
+    observedAt: "2026-09-04T08:00:00.000Z",
+    checkedAt: "2026-09-04T08:00:00.000Z",
+    conflictState: "NONE",
+    sourceVersion: input.local.head && input.github.refSha ? `${input.github.refSha}...${input.local.head}` : null,
+    provenance: "system-gh:api:compare",
+  };
+  return input;
+}
+
+test("current GitHub canonical relation overrides stale local tracking counts but never stronger conflict evidence", () => {
+  const behind = repositoryWithRelation("LOCAL_BEHIND", {
+    local: { ...repository().local, head: B, aheadBehind: { ahead: 7, behind: 0 } },
+    github: { ...repository().github, refSha: A },
+  });
+  expect(assessRepository(behind)).toMatchObject({
+    syncCondition: "LOCAL_BEHIND",
+    reasons: ["LOCAL_BEHIND"],
+  });
+
+  const conflicted = repositoryWithRelation("LOCAL_BEHIND", {
+    local: { ...repository().local, head: B, aheadBehind: { ahead: 7, behind: 0 } },
+    github: { ...repository().github, refSha: A },
+  });
+  if (!conflicted.github.relation) throw new Error("relation fixture missing");
+  conflicted.github.relation.conflictState = "CONFLICTED";
+  expect(assessRepository(conflicted)).toMatchObject({
+    attention: "BLOCKING",
+    syncCondition: "UNKNOWN",
+    reasons: ["OBSERVATION_CONFLICT"],
+  });
+});
+
+test("safe fast-forward sync preview is exact and fail-closed across eligibility, no-op, and blocker states", () => {
+  const behind = repositoryWithRelation("LOCAL_BEHIND", {
+    local: { ...repository().local, head: A, aheadBehind: { ahead: 9, behind: 0 } },
+    github: { ...repository().github, refSha: B },
+  });
+  expect(safeFastForwardSyncPreview(behind)).toEqual({
+    state: "ELIGIBLE",
+    reasons: ["LOCAL_BEHIND"],
+    expectedLocalPreHead: A,
+    expectedGitHubTargetSha: B,
+  });
+
+  expect(safeFastForwardSyncPreview(repositoryWithRelation("IDENTICAL"))).toEqual({
+    state: "NOT_NEEDED",
+    reasons: ["IN_SYNC"],
+    expectedLocalPreHead: A,
+    expectedGitHubTargetSha: A,
+  });
+
+  const dirty = repositoryWithRelation("LOCAL_BEHIND", { local: { ...repository().local, dirty: true }, github: { ...repository().github, refSha: B } });
+  expect(safeFastForwardSyncPreview(dirty)).toMatchObject({ state: "BLOCKED", reasons: ["DIRTY_WORKTREE"] });
+
+  const detached = repositoryWithRelation("LOCAL_BEHIND", { local: { ...repository().local, detached: true, branch: null, upstream: null }, github: { ...repository().github, refSha: B } });
+  expect(safeFastForwardSyncPreview(detached)).toMatchObject({ state: "BLOCKED", reasons: ["DETACHED_HEAD"] });
+
+  const ahead = repositoryWithRelation("LOCAL_AHEAD", { github: { ...repository().github, refSha: B } });
+  expect(safeFastForwardSyncPreview(ahead)).toMatchObject({ state: "BLOCKED", reasons: ["LOCAL_AHEAD"] });
+
+  const diverged = repositoryWithRelation("DIVERGED", { github: { ...repository().github, refSha: B } });
+  expect(safeFastForwardSyncPreview(diverged)).toMatchObject({ state: "BLOCKED", reasons: ["DIVERGED"] });
+
+  const stale = repositoryWithRelation("LOCAL_BEHIND", { github: { ...repository().github, refSha: B } });
+  if (!stale.github.relation) throw new Error("relation fixture missing");
+  stale.github.relation.freshness = "STALE";
+  expect(safeFastForwardSyncPreview(stale)).toMatchObject({ state: "UNKNOWN", reasons: ["EVIDENCE_STALE"] });
+
+  const unavailable = repositoryWithRelation("LOCAL_BEHIND", { github: { ...repository().github, refSha: B } });
+  if (!unavailable.github.relation) throw new Error("relation fixture missing");
+  unavailable.github.relation.availability = "UNAVAILABLE";
+  unavailable.github.relation.freshness = "STALE";
+  expect(safeFastForwardSyncPreview(unavailable)).toMatchObject({ state: "UNKNOWN", reasons: ["EVIDENCE_UNAVAILABLE", "EVIDENCE_STALE"] });
+
+  const conflicted = repositoryWithRelation("LOCAL_BEHIND", { github: { ...repository().github, refSha: B } });
+  if (!conflicted.github.relation) throw new Error("relation fixture missing");
+  conflicted.github.relation.conflictState = "CONFLICTED";
+  expect(safeFastForwardSyncPreview(conflicted)).toMatchObject({ state: "BLOCKED", reasons: ["OBSERVATION_CONFLICT"] });
+
+  const mismatch = repositoryWithRelation("LOCAL_BEHIND", { github: { ...repository().github, refSha: B } });
+  if (!mismatch.github.relation) throw new Error("relation fixture missing");
+  mismatch.github.relation.repositoryAlias = "other/widgets";
+  expect(safeFastForwardSyncPreview(mismatch)).toMatchObject({ state: "BLOCKED", reasons: ["IDENTITY_MISMATCH"] });
 });

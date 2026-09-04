@@ -3,6 +3,7 @@ import type { Store } from "./persistence";
 import {
   discoverRepositories,
   normalizeGitHubRemoteUrl,
+  observeGitHubCommitRelation,
   observeGitHubRemote,
   observeLocalRepository,
   type EvidenceAvailability,
@@ -114,6 +115,20 @@ export interface RepositoryView {
     refObservedAt: string | null;
     refCheckedAt: string | null;
     refConflictState: ObservationConflictState;
+    relation?: {
+      relation: "IDENTICAL" | "LOCAL_AHEAD" | "LOCAL_BEHIND" | "DIVERGED" | "UNKNOWN";
+      repositoryAlias: string | null;
+      refName: string | null;
+      localSha: string | null;
+      githubSha: string | null;
+      availability: EvidenceAvailability;
+      freshness: EvidenceFreshness;
+      observedAt: string | null;
+      checkedAt: string | null;
+      conflictState: ObservationConflictState;
+      sourceVersion: string | null;
+      provenance: string | null;
+    };
   };
 }
 
@@ -422,6 +437,7 @@ function persistGitHubObservations(store: Store, input: {
   refName: string | null;
   checkedAt: string;
   github: ReturnType<typeof observeGitHubRemote>;
+  relation: ReturnType<typeof observeGitHubCommitRelation>;
 }): void {
   const repositorySourceIdentity = input.knownRepositoryId
     ? `github:${input.knownRepositoryId}`
@@ -472,6 +488,28 @@ function persistGitHubObservations(store: Store, input: {
     freshness: input.github.ref.freshness,
     sourceVersion: input.github.ref.sha,
     provenance: input.github.provenance,
+  });
+
+  persistExternalObservation(store, {
+    workspaceId: input.workspaceId,
+    worktreeId: input.worktreeId,
+    sourceIdentity: repositorySourceIdentity,
+    subjectIdentity: `${refSubjectIdentity}:relation`,
+    kind: "github.relation",
+    value: {
+      relation: input.relation.relation,
+      repositoryAlias: input.relation.repositoryAlias,
+      refName: input.relation.refName,
+      localSha: input.relation.localSha,
+      githubSha: input.relation.githubSha,
+    },
+    absenceReason: input.relation.reason,
+    observedAt: input.checkedAt,
+    checkedAt: input.checkedAt,
+    availability: input.relation.availability,
+    freshness: input.relation.freshness,
+    sourceVersion: input.relation.sourceVersion,
+    provenance: input.relation.provenance,
   });
 }
 
@@ -547,6 +585,21 @@ function markUndiscoveredWorktree(store: Store, row: WorktreeRow, checkedAt: str
     sourceVersion: null,
     provenance: "system-gh:not-attempted",
   });
+  persistExternalObservation(store, {
+    workspaceId: row.workspace_id,
+    worktreeId: row.id,
+    sourceIdentity: githubSourceIdentity,
+    subjectIdentity: `${githubSubjectIdentity}:ref:${row.github_ref_name ?? "unknown"}:relation`,
+    kind: "github.relation",
+    value: null,
+    absenceReason: "repository-not-discovered",
+    observedAt: checkedAt,
+    checkedAt,
+    availability: "UNKNOWN",
+    freshness: "UNKNOWN",
+    sourceVersion: null,
+    provenance: "system-gh:not-attempted",
+  });
 }
 
 export async function refreshWorkspaceRepositories(
@@ -581,6 +634,14 @@ export async function refreshWorkspaceRepositories(
         ?? existing?.github_alias
         ?? null;
       const refName = github.ref.name ?? existing?.github_ref_name ?? local.branch;
+      const relation = observeGitHubCommitRelation({
+        alias: github.alias,
+        canonicalAlias: github.repository.canonicalAlias,
+        refName,
+        localSha: local.head,
+        githubSha: github.ref.sha,
+        runner: options.githubRunner,
+      });
 
       upsertWorktree(store, {
         id: worktreeId,
@@ -615,6 +676,7 @@ export async function refreshWorkspaceRepositories(
         refName,
         checkedAt,
         github,
+        relation,
       });
     }
     for (const previous of previousWorktrees) {
@@ -658,8 +720,16 @@ export function listRepositoryViews(store: Store, workspaceId: string): Reposito
     const aheadBehind = latestObservationForKind(store, row.id, "git.ahead-behind");
     const githubRepository = latestObservationForKind(store, row.id, "github.repository");
     const githubRef = latestObservationForKind(store, row.id, "github.ref");
+    const githubRelation = latestObservationForKind(store, row.id, "github.relation");
     const repositoryValue = observationValue<{ id: string; canonicalAlias: string | null; defaultBranch: string | null }>(githubRepository);
     const refValue = observationValue<{ name: string | null; sha: string }>(githubRef);
+    const relationValue = observationValue<{
+      relation: "IDENTICAL" | "LOCAL_AHEAD" | "LOCAL_BEHIND" | "DIVERGED" | "UNKNOWN";
+      repositoryAlias: string | null;
+      refName: string | null;
+      localSha: string | null;
+      githubSha: string | null;
+    }>(githubRelation);
 
     return {
       worktreeId: row.id,
@@ -702,6 +772,20 @@ export function listRepositoryViews(store: Store, workspaceId: string): Reposito
         refObservedAt: githubRef?.observedAt ?? null,
         refCheckedAt: githubRef?.checkedAt ?? null,
         refConflictState: defaultConflict(githubRef),
+        relation: {
+          relation: relationValue?.relation ?? "UNKNOWN",
+          repositoryAlias: relationValue?.repositoryAlias ?? null,
+          refName: relationValue?.refName ?? row.github_ref_name,
+          localSha: relationValue?.localSha ?? null,
+          githubSha: relationValue?.githubSha ?? null,
+          availability: defaultAvailability(githubRelation),
+          freshness: defaultFreshness(githubRelation),
+          observedAt: githubRelation?.observedAt ?? null,
+          checkedAt: githubRelation?.checkedAt ?? null,
+          conflictState: defaultConflict(githubRelation),
+          sourceVersion: githubRelation?.sourceVersion ?? null,
+          provenance: githubRelation?.provenance ?? null,
+        },
       },
     };
   });
