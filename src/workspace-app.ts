@@ -5,6 +5,12 @@ import {
   type CredentialReference,
 } from "./credentials";
 import {
+  archiveEnvironmentProfile,
+  createEnvironmentProfile,
+  listEnvironmentProfiles,
+  type EnvironmentProfile,
+} from "./environments";
+import {
   checkCredentialAvailability,
   MacOSKeychainAdapter,
   type CredentialAvailability,
@@ -33,6 +39,10 @@ export interface CredentialReferenceView extends CredentialReference {
   availability: CredentialAvailability;
 }
 
+export interface EnvironmentProfileView extends Omit<EnvironmentProfile, "credentialBindings"> {
+  credentialBindings: Array<EnvironmentProfile["credentialBindings"][number] & { availability: CredentialAvailability }>;
+}
+
 export type AddWorkspaceResult =
   | { ok: true; workspace: WorkspaceRecord }
   | { ok: false; error: string };
@@ -45,6 +55,14 @@ export type ArchiveCredentialReferenceResult =
   | { ok: true; credential: CredentialReference }
   | { ok: false; error: string };
 
+export type CreateEnvironmentProfileResult =
+  | { ok: true; environment: EnvironmentProfile }
+  | { ok: false; error: string };
+
+export type ArchiveEnvironmentProfileResult =
+  | { ok: true; environment: EnvironmentProfile }
+  | { ok: false; error: string };
+
 export type RefreshWorkspaceRepositoriesResult =
   | { ok: true; repositories: RepositoryView[] }
   | { ok: false; error: string };
@@ -53,12 +71,15 @@ export function loadWorkspaceHome(options: WorkspaceAppOptions = {}): {
   workspaces: WorkspaceRecord[];
   repositories: RepositoryView[];
   credentials: CredentialReferenceView[];
+  environments: EnvironmentProfileView[];
 } {
   const store = openStore(options);
   try {
     const workspaces = listWorkspaces(store);
     const adapter = options.credentialAdapter ?? new MacOSKeychainAdapter();
-    const credentials = listCredentialReferences(store).map((credential) => ({
+    const allCredentials = listCredentialReferences(store, { includeArchived: true });
+    const activeCredentials = allCredentials.filter((credential) => credential.archivedAt === null);
+    const credentials = activeCredentials.map((credential) => ({
       ...credential,
       availability: checkCredentialAvailability(
         credential,
@@ -66,10 +87,26 @@ export function loadWorkspaceHome(options: WorkspaceAppOptions = {}): {
         adapter,
       ).availability,
     }));
+    const credentialById = new Map(allCredentials.map((credential) => [credential.id, credential]));
+    const environments = listEnvironmentProfiles(store).map((environment) => ({
+      ...environment,
+      credentialBindings: environment.credentialBindings.map((binding) => {
+        const credential = credentialById.get(binding.credentialReferenceId);
+        const availability = !credential || credential.archivedAt !== null
+          ? "UNAVAILABLE" as const
+          : checkCredentialAvailability(
+            credential,
+            { operation: "environment.credential-availability" },
+            adapter,
+          ).availability;
+        return { ...binding, availability };
+      }),
+    }));
     return {
       workspaces,
       repositories: workspaces.flatMap((workspace) => listRepositoryViews(store, workspace.id)),
       credentials,
+      environments,
     };
   } finally {
     store.close();
@@ -139,6 +176,41 @@ export async function refreshWorkspaceRepositoriesRequest(
     return { ok: true, repositories };
   } catch (error) {
     return { ok: false, error: safeRefreshError(error) };
+  } finally {
+    store.close();
+  }
+}
+
+export function createEnvironmentProfileRequest(
+  input: {
+    workspaceId: string;
+    environmentName: string;
+    label?: string;
+    settings: Array<{ key: string; value: unknown }>;
+    credentialBindings: Array<{ key: string; credentialReferenceId: string }>;
+  },
+  options: WorkspaceAppOptions = {},
+): CreateEnvironmentProfileResult {
+  const store = openStore(options);
+  try {
+    return { ok: true, environment: createEnvironmentProfile(store, input) };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Environment profile could not be added." };
+  } finally {
+    store.close();
+  }
+}
+
+export function archiveEnvironmentProfileRequest(
+  id: string,
+  expectedVersion: number,
+  options: WorkspaceAppOptions = {},
+): ArchiveEnvironmentProfileResult {
+  const store = openStore(options);
+  try {
+    return { ok: true, environment: archiveEnvironmentProfile(store, id, expectedVersion) };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Environment profile could not be archived." };
   } finally {
     store.close();
   }

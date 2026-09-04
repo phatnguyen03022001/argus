@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import Database from "better-sqlite3";
 
-export const CURRENT_SCHEMA_VERSION = 3;
+export const CURRENT_SCHEMA_VERSION = 4;
 export type SqliteDatabase = InstanceType<typeof Database>;
 
 export interface Migration {
@@ -133,6 +133,45 @@ export const MIGRATIONS: Migration[] = [
         CREATE UNIQUE INDEX credential_references_active_locator_unique
           ON credential_references(keychain_service, keychain_account)
           WHERE archived_at IS NULL;
+      `);
+    },
+  },
+  {
+    version: 4,
+    up(db) {
+      db.exec(`
+        CREATE TABLE environment_profiles (
+          id TEXT PRIMARY KEY,
+          workspace_id TEXT NOT NULL,
+          environment_name TEXT NOT NULL,
+          label TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          archived_at TEXT,
+          version INTEGER NOT NULL CHECK (version >= 1),
+          FOREIGN KEY (workspace_id) REFERENCES workspaces(id) ON DELETE CASCADE
+        );
+
+        CREATE UNIQUE INDEX environment_profiles_active_name_unique
+          ON environment_profiles(workspace_id, environment_name)
+          WHERE archived_at IS NULL;
+
+        CREATE TABLE environment_settings (
+          profile_id TEXT NOT NULL,
+          setting_key TEXT NOT NULL,
+          value_json TEXT NOT NULL,
+          PRIMARY KEY (profile_id, setting_key),
+          FOREIGN KEY (profile_id) REFERENCES environment_profiles(id) ON DELETE CASCADE
+        );
+
+        CREATE TABLE environment_credential_bindings (
+          profile_id TEXT NOT NULL,
+          binding_key TEXT NOT NULL,
+          credential_reference_id TEXT NOT NULL,
+          PRIMARY KEY (profile_id, binding_key),
+          FOREIGN KEY (profile_id) REFERENCES environment_profiles(id) ON DELETE CASCADE,
+          FOREIGN KEY (credential_reference_id) REFERENCES credential_references(id)
+        );
       `);
     },
   },

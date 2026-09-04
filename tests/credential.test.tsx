@@ -25,6 +25,7 @@ function rehashExport(document: Record<string, any>): string {
     exportedAt: document.exportedAt,
     workspaces: document.workspaces,
     credentialReferences: document.credentialReferences,
+    environmentProfiles: document.environmentProfiles,
     repositoryWorktrees: document.repositoryWorktrees,
     repositoryObservations: document.repositoryObservations,
     auditEntries: document.auditEntries,
@@ -59,7 +60,7 @@ describe("credential reference durability and recovery", () => {
     raw.close();
 
     const migrated = api.openStore({ dataRoot });
-    expect(api.readSchemaVersion(migrated.db)).toBe(3);
+    expect(api.readSchemaVersion(migrated.db)).toBe(4);
     const columns = (migrated.db.prepare("PRAGMA table_info(credential_references)").all() as Array<{ name: string }>).map((row) => row.name);
     expect(columns).toEqual([
       "id",

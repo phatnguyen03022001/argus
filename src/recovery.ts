@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import path from "node:path";
 import { insertAudit, listAuditEntries, recordAudit, type AuditEntry } from "./audit";
 import { listCredentialReferences, type CredentialReference } from "./credentials";
+import { listEnvironmentProfiles, type EnvironmentProfile, type EnvironmentSettingValue } from "./environments";
 import { CURRENT_SCHEMA_VERSION, readSchemaVersion, type Store } from "./persistence";
 import { listWorkspaces, type WorkspaceRecord } from "./workspaces";
 
@@ -55,6 +56,7 @@ interface ExportBody {
   exportedAt: string;
   workspaces: WorkspaceRecord[];
   credentialReferences: CredentialReference[];
+  environmentProfiles: EnvironmentProfile[];
   repositoryWorktrees: RepositoryWorktreeBackup[];
   repositoryObservations: RepositoryObservationBackup[];
   auditEntries: AuditEntry[];
@@ -118,6 +120,7 @@ export function exportState(store: Store): string {
     exportedAt: new Date().toISOString(),
     workspaces: listWorkspaces(store, { includeArchived: true }).sort((a, b) => a.id.localeCompare(b.id)),
     credentialReferences: listCredentialReferences(store, { includeArchived: true }).sort((a, b) => a.id.localeCompare(b.id)),
+    environmentProfiles: listEnvironmentProfiles(store, { includeArchived: true }).sort((a, b) => a.id.localeCompare(b.id)),
     repositoryWorktrees: listRepositoryWorktrees(store),
     repositoryObservations: listRepositoryObservations(store),
     auditEntries: listAuditEntries(store).sort((a, b) => a.id.localeCompare(b.id)),
@@ -184,6 +187,23 @@ function requireJsonString(value: unknown, field: string): string | null {
   return result;
 }
 
+function requireEnvironmentKey(value: unknown, field: string, allowCredentialDesignation: boolean): string {
+  const key = requireString(value, field).trim();
+  if (!key || key.length > 255 || /[\u0000-\u001f\u007f]/u.test(key)) {
+    throw new Error(`Invalid restore field: ${field}.`);
+  }
+  if (!allowCredentialDesignation && /(password|token|secret|private[_\- ]?key|api[_\- ]?key)/i.test(key)) {
+    throw new Error(`Environment setting ${key} must use a credential binding.`);
+  }
+  return key;
+}
+
+function requireEnvironmentSettingValue(value: unknown, field: string): EnvironmentSettingValue {
+  if (value === null || typeof value === "string" || typeof value === "boolean") return value;
+  if (typeof value === "number" && Number.isFinite(value)) return value;
+  throw new Error(`Invalid restore scalar field: ${field}.`);
+}
+
 function assertNoSecretShapedKeys(value: unknown): void {
   if (Array.isArray(value)) {
     for (const item of value) assertNoSecretShapedKeys(item);
@@ -191,7 +211,7 @@ function assertNoSecretShapedKeys(value: unknown): void {
   }
   if (!value || typeof value !== "object") return;
   for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
-    if (/(secret|token|password|private[_-]?key)/i.test(key)) {
+    if (/(secret|token|password|private[_-]?key|api[_-]?key)/i.test(key)) {
       throw new Error("Restore document contains a forbidden secret-shaped field.");
     }
     assertNoSecretShapedKeys(child);
@@ -211,6 +231,7 @@ function validateRestoreDocument(value: unknown): ExportDocument {
   if (
     !Array.isArray(raw.workspaces)
     || !Array.isArray(raw.credentialReferences)
+    || !Array.isArray(raw.environmentProfiles)
     || !Array.isArray(raw.repositoryWorktrees)
     || !Array.isArray(raw.repositoryObservations)
     || !Array.isArray(raw.auditEntries)
@@ -271,6 +292,74 @@ function validateRestoreDocument(value: unknown): ExportDocument {
     const locator = `${credential.keychainService}\u0000${credential.keychainAccount}`;
     if (activeLocators.has(locator)) throw new Error("Duplicate active credential locator in restore.");
     activeLocators.add(locator);
+  }
+
+  const credentialIds = new Set(credentialReferences.map((credential) => credential.id));
+  const credentialById = new Map(credentialReferences.map((credential) => [credential.id, credential]));
+  const environmentProfiles: EnvironmentProfile[] = raw.environmentProfiles.map((item, index) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) throw new Error(`Invalid environment profile at index ${index}.`);
+    const row = item as Record<string, unknown>;
+    if (!isUuid(row.id)) throw new Error(`Invalid environment profile identity at index ${index}.`);
+    if (appNativeIds.has(row.id)) throw new Error(`Duplicate app-native identity in restore: ${row.id}.`);
+    const workspaceId = requireString(row.workspaceId, `environmentProfiles[${index}].workspaceId`);
+    if (!workspaceIds.has(workspaceId)) throw new Error(`Invalid environment workspace relationship at index ${index}.`);
+    if (!Array.isArray(row.settings) || !Array.isArray(row.credentialBindings)) {
+      throw new Error(`Invalid environment collections at index ${index}.`);
+    }
+    const settingKeys = new Set<string>();
+    const settings = row.settings.map((setting, settingIndex) => {
+      if (!setting || typeof setting !== "object" || Array.isArray(setting)) throw new Error(`Invalid environment setting at index ${index}:${settingIndex}.`);
+      const rawSetting = setting as Record<string, unknown>;
+      const key = requireEnvironmentKey(rawSetting.key, `environmentProfiles[${index}].settings[${settingIndex}].key`, false);
+      if (settingKeys.has(key)) throw new Error(`Duplicate environment setting key in restore: ${key}.`);
+      settingKeys.add(key);
+      return { key, value: requireEnvironmentSettingValue(rawSetting.value, `environmentProfiles[${index}].settings[${settingIndex}].value`) };
+    }).sort((a, b) => a.key.localeCompare(b.key));
+    const bindingKeys = new Set<string>();
+    const credentialBindings = row.credentialBindings.map((binding, bindingIndex) => {
+      if (!binding || typeof binding !== "object" || Array.isArray(binding)) throw new Error(`Invalid environment credential binding at index ${index}:${bindingIndex}.`);
+      const rawBinding = binding as Record<string, unknown>;
+      const key = requireEnvironmentKey(rawBinding.key, `environmentProfiles[${index}].credentialBindings[${bindingIndex}].key`, true);
+      if (bindingKeys.has(key)) throw new Error(`Duplicate environment credential binding key in restore: ${key}.`);
+      if (settingKeys.has(key)) throw new Error(`Environment setting and credential binding key collide in restore: ${key}.`);
+      const credentialReferenceId = requireString(rawBinding.credentialReferenceId, `environmentProfiles[${index}].credentialBindings[${bindingIndex}].credentialReferenceId`);
+      if (!credentialIds.has(credentialReferenceId)) throw new Error(`Invalid environment credential relationship at index ${index}:${bindingIndex}.`);
+      bindingKeys.add(key);
+      return { key, credentialReferenceId };
+    }).sort((a, b) => a.key.localeCompare(b.key));
+    const profile: EnvironmentProfile = {
+      id: row.id,
+      workspaceId,
+      environmentName: requireMetadata(row.environmentName, `environmentProfiles[${index}].environmentName`),
+      label: requireNullableMetadata(row.label, `environmentProfiles[${index}].label`),
+      settings,
+      credentialBindings,
+      createdAt: requireString(row.createdAt, `environmentProfiles[${index}].createdAt`),
+      updatedAt: requireString(row.updatedAt, `environmentProfiles[${index}].updatedAt`),
+      archivedAt: requireNullableString(row.archivedAt, `environmentProfiles[${index}].archivedAt`),
+      version: requirePositiveInteger(row.version, `environmentProfiles[${index}].version`),
+    };
+    if (profile.archivedAt === null) {
+      for (const binding of profile.credentialBindings) {
+        if (credentialById.get(binding.credentialReferenceId)?.archivedAt !== null) {
+          throw new Error(`Environment credential binding must reference an active credential reference at index ${index}.`);
+        }
+      }
+    }
+    appNativeIds.add(profile.id);
+    return profile;
+  });
+
+  const environmentIds = new Set<string>();
+  const activeEnvironmentNames = new Set<string>();
+  for (const profile of environmentProfiles) {
+    if (environmentIds.has(profile.id)) throw new Error(`Duplicate environment profile identity in restore: ${profile.id}.`);
+    environmentIds.add(profile.id);
+    if (profile.archivedAt === null) {
+      const key = `${profile.workspaceId}\u0000${profile.environmentName}`;
+      if (activeEnvironmentNames.has(key)) throw new Error("Duplicate active environment name in restore.");
+      activeEnvironmentNames.add(key);
+    }
   }
 
   const repositoryWorktrees: RepositoryWorktreeBackup[] = raw.repositoryWorktrees.map((item, index) => {
@@ -401,6 +490,7 @@ function validateRestoreDocument(value: unknown): ExportDocument {
     exportedAt,
     workspaces,
     credentialReferences,
+    environmentProfiles,
     repositoryWorktrees,
     repositoryObservations,
     auditEntries,
@@ -440,6 +530,9 @@ export function restoreState(store: Store, serialized: string): void {
     store.db.prepare("DELETE FROM repository_observations").run();
     store.db.prepare("DELETE FROM repository_worktrees").run();
     store.db.prepare("DELETE FROM audit_entries").run();
+    store.db.prepare("DELETE FROM environment_credential_bindings").run();
+    store.db.prepare("DELETE FROM environment_settings").run();
+    store.db.prepare("DELETE FROM environment_profiles").run();
     store.db.prepare("DELETE FROM credential_references").run();
     store.db.prepare("DELETE FROM workspaces").run();
 
@@ -477,6 +570,26 @@ export function restoreState(store: Store, serialized: string): void {
         credential.archivedAt,
         credential.version,
       );
+    }
+
+    const insertEnvironment = store.db.prepare(`
+      INSERT INTO environment_profiles (
+        id, workspace_id, environment_name, label, created_at, updated_at, archived_at, version
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const insertEnvironmentSetting = store.db.prepare(`
+      INSERT INTO environment_settings (profile_id, setting_key, value_json) VALUES (?, ?, ?)
+    `);
+    const insertEnvironmentBinding = store.db.prepare(`
+      INSERT INTO environment_credential_bindings (profile_id, binding_key, credential_reference_id) VALUES (?, ?, ?)
+    `);
+    for (const profile of document.environmentProfiles) {
+      insertEnvironment.run(
+        profile.id, profile.workspaceId, profile.environmentName, profile.label,
+        profile.createdAt, profile.updatedAt, profile.archivedAt, profile.version,
+      );
+      for (const setting of profile.settings) insertEnvironmentSetting.run(profile.id, setting.key, JSON.stringify(setting.value));
+      for (const binding of profile.credentialBindings) insertEnvironmentBinding.run(profile.id, binding.key, binding.credentialReferenceId);
     }
 
     const insertWorktree = store.db.prepare(`

@@ -1,6 +1,6 @@
 import { assessRepository, repositoryReasonText, safeFastForwardSyncPreview, sortRepositoryAssessments } from "./repository-assessment";
 import type { RepositoryView } from "./repository-observations";
-import type { CredentialReferenceView } from "./workspace-app";
+import type { CredentialReferenceView, EnvironmentProfileView } from "./workspace-app";
 import type { WorkspaceRecord } from "./workspaces";
 
 function evidenceStatus(
@@ -21,11 +21,13 @@ export function WorkspaceHome({
   workspaces,
   repositories = [],
   credentials = [],
+  environments = [],
   error,
 }: {
   workspaces: WorkspaceRecord[];
   repositories?: RepositoryView[];
   credentials?: CredentialReferenceView[];
+  environments?: EnvironmentProfileView[];
   error?: string;
 }) {
   const labels = new Map(workspaces.map((workspace) => [workspace.id, workspace.label]));
@@ -93,6 +95,69 @@ export function WorkspaceHome({
             <input name="label" placeholder="Primary GitHub" autoComplete="off" />
           </label>
           <button type="submit">Add credential reference</button>
+        </form>
+      </section>
+
+      <section className="panel" aria-labelledby="environments-heading">
+        <div className="section-heading">
+          <h2 id="environments-heading">Environment profiles</h2>
+          <span>{environments.length}</span>
+        </div>
+        {environments.length === 0 ? (
+          <p className="empty">No environment profiles configured.</p>
+        ) : (
+          <ul className="workspace-list">
+            {environments.map((environment) => (
+              <li key={environment.id} className="workspace-row">
+                <div>
+                  <strong>{environment.label ?? environment.environmentName}</strong>
+                  <small>{labels.get(environment.workspaceId) ?? environment.workspaceId} · {environment.environmentName}</small>
+                  {environment.settings.map((setting) => (
+                    <code key={setting.key}>{setting.key}={String(setting.value)}</code>
+                  ))}
+                  {environment.credentialBindings.map((binding) => (
+                    <code key={binding.key}>{binding.key} → {binding.credentialReferenceId} · {binding.availability}</code>
+                  ))}
+                </div>
+                <div className="workspace-actions">
+                  <small>v{environment.version}</small>
+                  <form action="/environments" method="post">
+                    <input type="hidden" name="intent" value="archive" />
+                    <input type="hidden" name="id" value={environment.id} />
+                    <input type="hidden" name="version" value={environment.version} />
+                    <button type="submit">Archive environment</button>
+                  </form>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        <form action="/environments" method="post" className="workspace-form">
+          <input type="hidden" name="intent" value="create" />
+          <label>
+            Workspace
+            <select name="workspaceId" required defaultValue="">
+              <option value="" disabled>Select workspace</option>
+              {workspaces.map((workspace) => <option key={workspace.id} value={workspace.id}>{workspace.label}</option>)}
+            </select>
+          </label>
+          <label>
+            Environment name
+            <input name="environmentName" required placeholder="production" autoComplete="off" />
+          </label>
+          <label>
+            Label (optional)
+            <input name="label" placeholder="Production" autoComplete="off" />
+          </label>
+          <label>
+            Settings (one KEY=VALUE per line)
+            <textarea name="settings" rows={3} placeholder={"REGION=asia-southeast1\nLOG_LEVEL=info"} />
+          </label>
+          <label>
+            Credential bindings (one KEY=REFERENCE_ID per line)
+            <textarea name="credentialBindings" rows={3} placeholder="GITHUB_CREDENTIAL=reference-id" />
+          </label>
+          <button type="submit" disabled={workspaces.length === 0}>Add environment profile</button>
         </form>
       </section>
 

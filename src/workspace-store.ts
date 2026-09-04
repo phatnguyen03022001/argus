@@ -6,3 +6,4 @@ export * from "./repositories";
 export * from "./repository-observations";
 export * from "./credentials";
 export * from "./keychain";
+export * from "./environments";

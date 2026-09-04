@@ -227,6 +227,23 @@ export function archiveCredentialReference(
     throw new CredentialReferenceError(message);
   }
 
+  const activeEnvironmentBinding = store.db.prepare(`
+    SELECT environment_profiles.id
+    FROM environment_credential_bindings
+    JOIN environment_profiles ON environment_profiles.id = environment_credential_bindings.profile_id
+    WHERE environment_credential_bindings.credential_reference_id = ?
+      AND environment_profiles.archived_at IS NULL
+    LIMIT 1
+  `).get(id) as { id?: string } | undefined;
+  if (activeEnvironmentBinding?.id) {
+    const message = "Credential reference is bound to an active environment profile.";
+    recordAudit(store, {
+      operation: "credential-reference.archive", targetIdentity: id, outcome: "rejected", reason: message,
+      preRecordId: id, preVersion: current.version, postRecordId: null, postVersion: null,
+    });
+    throw new CredentialReferenceError(message);
+  }
+
   const now = new Date().toISOString();
   const archived: CredentialReference = {
     ...current,
