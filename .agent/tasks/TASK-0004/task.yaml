@@ -1,0 +1,256 @@
+protocol_version: 3
+
+task_id: TASK-0004
+task_revision: 1
+state: APPROVED
+
+origin:
+  type: architect_planning
+  milestone: PHASE_3_GIT_REPO_CONTROL
+  slice: DERIVED_REPOSITORY_HEALTH_AND_ATTENTION
+
+architect_binding:
+  target_repository: phatnguyen03022001/argus
+
+target:
+  repository: phatnguyen03022001/argus
+  branch:
+    name: main
+    role: canonical
+
+execution_base:
+  mode: handoff_snapshot
+  capture: after_final_planning_commit
+  require_exact_match: true
+
+skill_library:
+  repository: phatnguyen03022001/agent-skills
+  revision: "4a063c41f429207577434600a3571dc17822cd78"
+
+architect_analysis_skills:
+  - architect
+  - simplicity
+  - verification
+
+execution_skills:
+  required:
+    - executor
+    - simplicity
+    - verification
+  recommended: []
+
+external_skills:
+  architect_analysis: []
+  execution_required: []
+  execution_recommended: []
+
+authority_sources:
+  - source: "phatnguyen03022001/argus@4e74b786e6504a53fb7d72009de5ad92f297a4a1"
+    role: >-
+      Current accepted Argus product/design truth plus accepted TASK-0003 revision-4 repository observation lineage.
+      Governs Phase 3 health/attention semantics and the existing raw-observation boundary.
+    precedence: 1
+  - source: "phatnguyen03022001/agent-skills@4a063c41f429207577434600a3571dc17822cd78"
+    role: "Current operator-selected protocol-v3 Executor, simplicity, verification, and task-lifecycle authority."
+    precedence: 2
+
+structure_authority:
+  status: RESOLVED
+  source: >-
+    Preserve the existing single-package Next.js/TypeScript application. Derived repository assessment is a local
+    domain projection over the existing RepositoryView/observation surface and may use the smallest local src/test/UI
+    structure needed. No new top-level ownership boundary, package, service, schema, dependency, adapter framework,
+    background process, or shared infrastructure abstraction is authorized.
+
+objective: >-
+  Complete the next bounded Phase 3 slice by deriving explainable repository health, sync condition, and attention
+  from the accepted current local-Git/GitHub observations, then surface the result in the existing local UI. The
+  projection must be deterministic, recomputable, reason-coded, provenance/freshness-aware, and non-authoritative.
+  It must not persist health as source truth and must not perform or authorize Git mutation/synchronization.
+
+scope:
+  required_changes:
+    - >-
+      Add a deterministic repository assessment projection over the existing RepositoryView/raw observation model.
+      The projection exposes: `health` in {HEALTHY, DEGRADED, UNKNOWN}; `attention` in
+      {BLOCKING, ACTION_REQUIRED, DEGRADED, INFO, HEALTHY}; a `sync_condition` in
+      {IN_SYNC, LOCAL_AHEAD, LOCAL_BEHIND, DIVERGED, MISMATCH_UNCLASSIFIED, UNKNOWN}; a stable ordered list of
+      reason codes; and enough input identity/freshness/availability/conflict summary for the UI to explain the result.
+    - >-
+      Apply fail-closed evidence precedence. Any required conflicting observation prevents HEALTHY and yields
+      BLOCKING attention. Required unavailable/unknown evidence yields UNKNOWN health with at least DEGRADED attention;
+      stale required evidence yields DEGRADED health even when a last-known value is present. Do not rewrite stale or
+      unavailable evidence as current merely to classify the repository.
+    - >-
+      When local and GitHub ref evidence are current/available/non-conflicted, derive sync condition without network
+      mutation: equal local HEAD/ref SHA => IN_SYNC; ahead>0/behind=0 => LOCAL_AHEAD; ahead=0/behind>0 => LOCAL_BEHIND;
+      ahead>0/behind>0 => DIVERGED; unequal HEAD/ref SHA without trustworthy relation counts => MISMATCH_UNCLASSIFIED.
+      Missing required comparison evidence => UNKNOWN. Do not infer branch policy beyond the ref that TASK-0003 already observes.
+    - >-
+      Derive operator attention from the same inspectable facts. DIRTY_WORKTREE and DETACHED_HEAD are ACTION_REQUIRED;
+      LOCAL_AHEAD and LOCAL_BEHIND are ACTION_REQUIRED; DIVERGED and observation conflict are BLOCKING;
+      unavailable/unknown/stale required evidence is at least DEGRADED; NO_UPSTREAM may be INFO when stronger evidence
+      still proves the current observed ref is IN_SYNC. Multiple reasons are preserved and deterministically ordered;
+      the highest-severity condition controls the attention value.
+    - >-
+      HEALTHY is permitted only when required local/GitHub/ref evidence is available, current, non-conflicted, the
+      worktree is clean and attached, and sync condition is IN_SYNC. A repository may remain HEALTHY with INFO-level
+      non-blocking reasons such as NO_UPSTREAM only when the remote-ref comparison itself is current and exact.
+    - >-
+      Integrate assessments into the existing operator UI. Add a compact "Needs attention" view ordered first by
+      attention severity and then deterministic repository identity/path, plus per-repository health/sync/attention
+      and reason-code explanation. Preserve access to the existing raw Git/GitHub evidence and timestamps instead of
+      replacing it with opaque badges or a numeric score.
+    - >-
+      Keep health/attention ephemeral and recomputed from current observations. Do not add persistence tables/columns,
+      migrations, background polling, hidden queues, audit events for pure projection, or cached health as canonical truth.
+    - >-
+      Add deterministic domain/UI tests covering at least healthy/in-sync, dirty, detached, local-ahead, local-behind,
+      diverged, unequal-unclassified, stale, unavailable/unknown, conflict precedence, multi-reason severity ordering,
+      and the allowed HEALTHY+INFO no-upstream case. Existing TASK-0003 no-mutation/provenance tests must remain green.
+    - >-
+      Run fresh frozen-lockfile install, repository-owned `pnpm verify`, bounded production loopback smoke using only
+      run-owned temporary Argus data, exact diff/dependency/schema/secret/forward-scope inspection, publish exactly one
+      implementation commit plus one report-only direct child on main, and stop at NEEDS_REVIEW.
+
+  allowed_existing_files_or_components:
+    - existing repository observation/domain projection surface under src/
+    - existing workspace/repository application view surface under src/ and app/
+    - existing test suite under tests/
+    - README.md only if current capability wording becomes materially stale after this slice
+    - .agent/tasks/TASK-0004/report.yaml
+  expected_files_are_restrictive: false
+
+invariants:
+  - "GitHub remote main remains canonical repository truth and target topology remains exactly {main}."
+  - "Health, sync condition, attention, and reason codes are derived projections, never external or app-native source truth."
+  - "Every HEALTHY result is explainable from current available non-conflicted required observations."
+  - "No stale, unavailable, unknown, or conflicted required evidence may be hidden behind an optimistic healthy state."
+  - "No numeric health score, probabilistic confidence score, hidden magic weighting, or persisted current-health snapshot is introduced."
+  - "No production Git/GitHub observation or derived-health path mutates discovered repositories, refs, index, config, worktree, remotes, or GitHub state."
+  - "No Git sync/mutation action, environment/Keychain capability, provider/resource integration, task/agent/business capability, background poller, branch, tag, release, workflow, or deployment is introduced."
+  - "No secret value enters persistence, logs, UI, tests, reports, or repository artifacts."
+
+forbidden_changes:
+  - "Do not implement fetch/pull/merge/rebase/reset/clean/stash/checkout/switch/push or any repository synchronization/mutation control."
+  - "Do not add a database migration/schema field for health, attention, sync condition, or derived reason codes."
+  - "Do not add dependencies, packages, services, queues, workers, watchers, plugin registries, policy engines, scoring engines, or generic rule DSLs."
+  - "Do not infer repository branch policy, desired branch, deployment environment, task authority, or product state not present in current observations."
+  - "Do not implement Phase 4+ environment/secrets or any later milestone surface."
+  - "Do not create branches/tags/releases/workflows or mutate another repository."
+
+gap_policy:
+  local_auto_fix: true
+  scope_expansion: forbidden
+  architecture_change: forbidden
+  spec_change: forbidden
+  dependency_change: forbidden
+  public_contract_change: forbidden
+  blocking_gap_behavior: BLOCKED
+
+continuation_policy:
+  mode: MANUAL
+  stop_conditions:
+    - BLOCKED
+    - STALE_STATE
+    - AUTHORITY_REQUIRED
+    - CURRENT_PHASE_CAPABILITY_UNAVAILABLE
+    - REVIEW_REQUIRED
+    - REVERIFY_REQUIRED
+    - USER_STOP
+
+capability_requirements:
+  EXECUTION:
+    - exact_remote_ref_read
+    - repository_content_read
+    - repository_content_write
+    - native_local_execution
+    - filesystem_test_fixture_execution
+    - git_read_observation
+    - github_cli_read_observation
+    - package_install
+    - test_execution
+    - production_build_execution
+    - loopback_runtime_smoke
+    - exact_diff_inspection
+
+acceptance_criteria:
+  - id: AC-1
+    requirement: "Repository health/attention is deterministic, explainable, and non-authoritative."
+    evidence_required: >-
+      Pure/domain tests prove exact health/attention/sync/reason outputs from fixed RepositoryView inputs; source
+      inspection proves the projection performs no persistence or external command/API side effect.
+  - id: AC-2
+    requirement: "Required evidence degradation propagates fail-closed."
+    evidence_required: >-
+      Tests prove conflict => BLOCKING/non-healthy, unavailable/unknown => UNKNOWN/non-healthy, stale => DEGRADED, and
+      no combination of degraded required inputs yields HEALTHY.
+  - id: AC-3
+    requirement: "Sync condition classification is exact and does not invent branch policy."
+    evidence_required: >-
+      Matrix tests prove IN_SYNC, LOCAL_AHEAD, LOCAL_BEHIND, DIVERGED, MISMATCH_UNCLASSIFIED, and UNKNOWN from the
+      current observed local HEAD/GitHub ref/relation inputs only.
+  - id: AC-4
+    requirement: "Attention severity and reason ordering are stable and useful to the operator."
+    evidence_required: >-
+      Tests prove dirty/detached/ahead/behind/diverged/conflict/stale/unavailable/no-upstream semantics, multi-reason
+      highest-severity selection, deterministic reason ordering, and HEALTHY+INFO only for the explicitly allowed
+      no-upstream/in-sync case.
+  - id: AC-5
+    requirement: "UI answers what needs attention without hiding raw evidence."
+    evidence_required: >-
+      UI tests/render evidence show Needs attention ordering plus per-repository health/sync/attention/reasons while
+      raw local/GitHub evidence, freshness/availability/conflict and timestamps remain inspectable.
+  - id: AC-6
+    requirement: "TASK-0003 operationally read-only guarantees remain intact."
+    evidence_required: >-
+      Existing repository observation invariance/provenance tests remain green; exact diff/source inspection finds no
+      Git/GitHub mutation command, observation weakening, schema/dependency expansion, secret surface, or Phase 4+ behavior.
+  - id: AC-7
+    requirement: "Implementation and report lineage are exact and reproducible."
+    evidence_required: >-
+      Fresh frozen install, full pnpm verify, bounded production loopback smoke and hygiene PASS; implementation is one
+      direct child of exact task base, report is its report-only child, final local/remote main match, topology is
+      exactly {main}, and task/report identities are exact.
+
+verification:
+  executor_checks:
+    - id: CHECK-1
+      command_or_check: "Fresh-preflight exact TASK-0004 revision/base/task blob, accepted TASK-0003 review identity, MAIN_ONLY topology, clean synchronized local state, and current required capabilities before mutation."
+      required: true
+    - id: CHECK-2
+      command_or_check: "Run deterministic repository-assessment matrix tests for health, attention, sync condition, reason precedence/order, and degraded evidence propagation."
+      required: true
+    - id: CHECK-3
+      command_or_check: "Run UI/render tests proving Needs attention ordering and explainable per-repository assessment without losing raw observation evidence."
+      required: true
+    - id: CHECK-4
+      command_or_check: "Run existing TASK-0003 repository no-mutation/provenance/reconciliation regression coverage unchanged or stronger."
+      required: true
+    - id: CHECK-5
+      command_or_check: "Run fresh pnpm install --frozen-lockfile and repository-owned pnpm verify under the repository-pinned Node/pnpm versions, then bounded 127.0.0.1 production smoke using run-owned temporary Argus data and clean it safely."
+      required: true
+    - id: CHECK-6
+      command_or_check: "Inspect exact implementation diff, schema/migrations, dependencies, production Git/GitHub subprocess/API boundaries, secrets, runtime artifacts and forward-scope terms; require no unauthorized mutation or Phase 4+ expansion."
+      required: true
+    - id: CHECK-7
+      command_or_check: "Publish exactly one implementation commit plus one report-only child; re-resolve final remote main, parent/diffs, task/report blobs, clean local state, zero tags and topology exactly {main}."
+      required: true
+  authoritative_verification:
+    required: false
+    mechanism: ""
+    expected_signal: ""
+
+git_authority:
+  create_branch: false
+  commit: true
+  push: true
+  promote_to_main: false
+
+release_authority:
+  create_version_tag: false
+  mutate_repository_metadata: false
+  publish_release: false
+
+blocking_decisions: []
+execution_ready: true
