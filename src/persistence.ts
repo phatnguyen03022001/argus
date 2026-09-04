@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import Database from "better-sqlite3";
 
-export const CURRENT_SCHEMA_VERSION = 4;
+export const CURRENT_SCHEMA_VERSION = 5;
 export type SqliteDatabase = InstanceType<typeof Database>;
 
 export interface Migration {
@@ -171,6 +171,30 @@ export const MIGRATIONS: Migration[] = [
           PRIMARY KEY (profile_id, binding_key),
           FOREIGN KEY (profile_id) REFERENCES environment_profiles(id) ON DELETE CASCADE,
           FOREIGN KEY (credential_reference_id) REFERENCES credential_references(id)
+        );
+      `);
+    },
+  },
+  {
+    version: 5,
+    up(db) {
+      db.exec(`
+        CREATE TABLE provider_observations (
+          environment_profile_id TEXT PRIMARY KEY,
+          provider TEXT NOT NULL CHECK (provider = 'neon'),
+          resource_type TEXT NOT NULL CHECK (resource_type = 'project'),
+          configured_resource_id TEXT NOT NULL,
+          resource_id TEXT NOT NULL,
+          display_name TEXT,
+          status TEXT,
+          observed_at TEXT NOT NULL,
+          checked_at TEXT NOT NULL,
+          availability TEXT NOT NULL CHECK (availability IN ('AVAILABLE', 'UNAVAILABLE', 'UNKNOWN')),
+          freshness TEXT NOT NULL CHECK (freshness IN ('CURRENT', 'STALE', 'UNKNOWN')),
+          source_endpoint TEXT NOT NULL,
+          source_metadata_json TEXT NOT NULL,
+          failure_kind TEXT,
+          FOREIGN KEY (environment_profile_id) REFERENCES environment_profiles(id) ON DELETE CASCADE
         );
       `);
     },

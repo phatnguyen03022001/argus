@@ -26,6 +26,7 @@ function rehashExport(document: Record<string, any>): string {
     workspaces: document.workspaces,
     credentialReferences: document.credentialReferences,
     environmentProfiles: document.environmentProfiles,
+    providerObservations: document.providerObservations,
     repositoryWorktrees: document.repositoryWorktrees,
     repositoryObservations: document.repositoryObservations,
     auditEntries: document.auditEntries,
@@ -54,7 +55,7 @@ describe("workspace environment profiles", () => {
     raw.close();
 
     const migrated = api.openStore({ dataRoot });
-    expect(api.readSchemaVersion(migrated.db)).toBe(4);
+    expect(api.readSchemaVersion(migrated.db)).toBe(5);
     const profileColumns = (migrated.db.prepare("PRAGMA table_info(environment_profiles)").all() as Array<{ name: string }>).map((row) => row.name);
     expect(profileColumns).toEqual([
       "id", "workspace_id", "environment_name", "label", "created_at", "updated_at", "archived_at", "version",

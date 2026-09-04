@@ -17,6 +17,13 @@ import {
   type CredentialSecretAdapter,
 } from "./keychain";
 import {
+  listNeonProjectViews,
+  refreshNeonProjectObservation,
+  NeonObservationError,
+  type NeonFetch,
+  type NeonProjectObservation,
+} from "./neon";
+import {
   listRepositoryViews,
   refreshWorkspaceRepositories,
   type RepositoryView,
@@ -33,6 +40,13 @@ export interface WorkspaceAppOptions {
 export interface RepositoryRefreshRequestOptions extends WorkspaceAppOptions {
   checkedAt?: string;
   githubRunner?: ProcessRunner;
+}
+
+export interface NeonProjectRefreshRequestOptions extends WorkspaceAppOptions {
+  checkedAt?: string;
+  fetchImpl?: NeonFetch;
+  timeoutMs?: number;
+  maxResponseBytes?: number;
 }
 
 export interface CredentialReferenceView extends CredentialReference {
@@ -63,6 +77,10 @@ export type ArchiveEnvironmentProfileResult =
   | { ok: true; environment: EnvironmentProfile }
   | { ok: false; error: string };
 
+export type RefreshNeonProjectResult =
+  | { ok: true; project: NeonProjectObservation }
+  | { ok: false; error: string };
+
 export type RefreshWorkspaceRepositoriesResult =
   | { ok: true; repositories: RepositoryView[] }
   | { ok: false; error: string };
@@ -72,6 +90,7 @@ export function loadWorkspaceHome(options: WorkspaceAppOptions = {}): {
   repositories: RepositoryView[];
   credentials: CredentialReferenceView[];
   environments: EnvironmentProfileView[];
+  neonProjects: NeonProjectObservation[];
 } {
   const store = openStore(options);
   try {
@@ -107,6 +126,7 @@ export function loadWorkspaceHome(options: WorkspaceAppOptions = {}): {
       repositories: workspaces.flatMap((workspace) => listRepositoryViews(store, workspace.id)),
       credentials,
       environments,
+      neonProjects: listNeonProjectViews(store),
     };
   } finally {
     store.close();
@@ -211,6 +231,32 @@ export function archiveEnvironmentProfileRequest(
     return { ok: true, environment: archiveEnvironmentProfile(store, id, expectedVersion) };
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : "Environment profile could not be archived." };
+  } finally {
+    store.close();
+  }
+}
+
+export async function refreshNeonProjectRequest(
+  environmentProfileId: string,
+  options: NeonProjectRefreshRequestOptions = {},
+): Promise<RefreshNeonProjectResult> {
+  const store = openStore(options);
+  try {
+    const project = await refreshNeonProjectObservation(store, environmentProfileId, {
+      credentialAdapter: options.credentialAdapter,
+      checkedAt: options.checkedAt,
+      fetchImpl: options.fetchImpl,
+      timeoutMs: options.timeoutMs,
+      maxResponseBytes: options.maxResponseBytes,
+    });
+    return { ok: true, project };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof NeonObservationError
+        ? error.message
+        : "Neon project refresh failed.",
+    };
   } finally {
     store.close();
   }

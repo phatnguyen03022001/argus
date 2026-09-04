@@ -50,6 +50,29 @@ interface RepositoryObservationBackup {
   conflictValueJson: string | null;
 }
 
+interface ProviderObservationBackup {
+  environmentProfileId: string;
+  provider: "neon";
+  resourceType: "project";
+  configuredResourceId: string;
+  resourceId: string;
+  displayName: string | null;
+  status: string | null;
+  observedAt: string;
+  checkedAt: string;
+  availability: Availability;
+  freshness: Freshness;
+  sourceEndpoint: string;
+  sourceMetadata: {
+    regionId?: string;
+    platformId?: string;
+    pgVersion?: number;
+    createdAt?: string;
+    updatedAt?: string;
+  };
+  failureKind: string | null;
+}
+
 interface ExportBody {
   formatVersion: number;
   schemaVersion: number;
@@ -57,6 +80,7 @@ interface ExportBody {
   workspaces: WorkspaceRecord[];
   credentialReferences: CredentialReference[];
   environmentProfiles: EnvironmentProfile[];
+  providerObservations: ProviderObservationBackup[];
   repositoryWorktrees: RepositoryWorktreeBackup[];
   repositoryObservations: RepositoryObservationBackup[];
   auditEntries: AuditEntry[];
@@ -113,6 +137,44 @@ function listRepositoryObservations(store: Store): RepositoryObservationBackup[]
   }));
 }
 
+function listProviderObservations(store: Store): ProviderObservationBackup[] {
+  const rows = store.db.prepare("SELECT * FROM provider_observations ORDER BY environment_profile_id").all() as Record<string, unknown>[];
+  return rows.map((row) => {
+    let rawMetadata: unknown = {};
+    try {
+      rawMetadata = JSON.parse(String(row.source_metadata_json));
+    } catch {
+      throw new Error("Provider observation metadata is malformed.");
+    }
+    if (!rawMetadata || typeof rawMetadata !== "object" || Array.isArray(rawMetadata)) {
+      throw new Error("Provider observation metadata is malformed.");
+    }
+    const raw = rawMetadata as Record<string, unknown>;
+    const sourceMetadata: ProviderObservationBackup["sourceMetadata"] = {};
+    if (typeof raw.regionId === "string") sourceMetadata.regionId = raw.regionId;
+    if (typeof raw.platformId === "string") sourceMetadata.platformId = raw.platformId;
+    if (typeof raw.pgVersion === "number" && Number.isInteger(raw.pgVersion)) sourceMetadata.pgVersion = raw.pgVersion;
+    if (typeof raw.createdAt === "string") sourceMetadata.createdAt = raw.createdAt;
+    if (typeof raw.updatedAt === "string") sourceMetadata.updatedAt = raw.updatedAt;
+    return {
+      environmentProfileId: String(row.environment_profile_id),
+      provider: "neon",
+      resourceType: "project",
+      configuredResourceId: String(row.configured_resource_id),
+      resourceId: String(row.resource_id),
+      displayName: row.display_name == null ? null : String(row.display_name),
+      status: row.status == null ? null : String(row.status),
+      observedAt: String(row.observed_at),
+      checkedAt: String(row.checked_at),
+      availability: String(row.availability) as Availability,
+      freshness: String(row.freshness) as Freshness,
+      sourceEndpoint: String(row.source_endpoint),
+      sourceMetadata,
+      failureKind: row.failure_kind == null ? null : String(row.failure_kind),
+    };
+  });
+}
+
 export function exportState(store: Store): string {
   const body: ExportBody = {
     formatVersion: EXPORT_FORMAT_VERSION,
@@ -121,6 +183,7 @@ export function exportState(store: Store): string {
     workspaces: listWorkspaces(store, { includeArchived: true }).sort((a, b) => a.id.localeCompare(b.id)),
     credentialReferences: listCredentialReferences(store, { includeArchived: true }).sort((a, b) => a.id.localeCompare(b.id)),
     environmentProfiles: listEnvironmentProfiles(store, { includeArchived: true }).sort((a, b) => a.id.localeCompare(b.id)),
+    providerObservations: listProviderObservations(store),
     repositoryWorktrees: listRepositoryWorktrees(store),
     repositoryObservations: listRepositoryObservations(store),
     auditEntries: listAuditEntries(store).sort((a, b) => a.id.localeCompare(b.id)),
@@ -218,6 +281,30 @@ function assertNoSecretShapedKeys(value: unknown): void {
   }
 }
 
+function requireNeonProjectId(value: unknown, field: string): string {
+  const id = requireString(value, field);
+  if (!/^[a-z0-9-]{1,60}$/.test(id)) throw new Error(`Invalid restore field: ${field}.`);
+  return id;
+}
+
+function requireProviderMetadata(value: unknown, field: string): ProviderObservationBackup["sourceMetadata"] {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`Invalid restore field: ${field}.`);
+  }
+  const raw = value as Record<string, unknown>;
+  const allowed = new Set(["regionId", "platformId", "pgVersion", "createdAt", "updatedAt"]);
+  for (const key of Object.keys(raw)) {
+    if (!allowed.has(key)) throw new Error(`Invalid restore field: ${field}.${key}.`);
+  }
+  const metadata: ProviderObservationBackup["sourceMetadata"] = {};
+  if (raw.regionId !== undefined) metadata.regionId = requireMetadata(raw.regionId, `${field}.regionId`);
+  if (raw.platformId !== undefined) metadata.platformId = requireMetadata(raw.platformId, `${field}.platformId`);
+  if (raw.pgVersion !== undefined) metadata.pgVersion = requirePositiveInteger(raw.pgVersion, `${field}.pgVersion`);
+  if (raw.createdAt !== undefined) metadata.createdAt = requireMetadata(raw.createdAt, `${field}.createdAt`);
+  if (raw.updatedAt !== undefined) metadata.updatedAt = requireMetadata(raw.updatedAt, `${field}.updatedAt`);
+  return metadata;
+}
+
 function validateRestoreDocument(value: unknown): ExportDocument {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid restore document.");
   assertNoSecretShapedKeys(value);
@@ -232,6 +319,7 @@ function validateRestoreDocument(value: unknown): ExportDocument {
     !Array.isArray(raw.workspaces)
     || !Array.isArray(raw.credentialReferences)
     || !Array.isArray(raw.environmentProfiles)
+    || !Array.isArray(raw.providerObservations)
     || !Array.isArray(raw.repositoryWorktrees)
     || !Array.isArray(raw.repositoryObservations)
     || !Array.isArray(raw.auditEntries)
@@ -360,6 +448,54 @@ function validateRestoreDocument(value: unknown): ExportDocument {
       if (activeEnvironmentNames.has(key)) throw new Error("Duplicate active environment name in restore.");
       activeEnvironmentNames.add(key);
     }
+  }
+
+  const providerObservations: ProviderObservationBackup[] = raw.providerObservations.map((item, index) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) throw new Error(`Invalid provider observation at index ${index}.`);
+    const row = item as Record<string, unknown>;
+    const environmentProfileId = requireString(row.environmentProfileId, `providerObservations[${index}].environmentProfileId`);
+    if (!environmentIds.has(environmentProfileId)) throw new Error(`Invalid provider environment relationship at index ${index}.`);
+    if (row.provider !== "neon" || row.resourceType !== "project") {
+      throw new Error(`Invalid provider observation identity at index ${index}.`);
+    }
+    const configuredResourceId = requireNeonProjectId(row.configuredResourceId, `providerObservations[${index}].configuredResourceId`);
+    const resourceId = requireNeonProjectId(row.resourceId, `providerObservations[${index}].resourceId`);
+    if (configuredResourceId !== resourceId) throw new Error(`Provider observation identity mismatch at index ${index}.`);
+    const availability = row.availability;
+    if (availability !== "AVAILABLE" && availability !== "UNAVAILABLE" && availability !== "UNKNOWN") {
+      throw new Error(`Invalid provider observation availability at index ${index}.`);
+    }
+    const freshness = row.freshness;
+    if (freshness !== "CURRENT" && freshness !== "STALE" && freshness !== "UNKNOWN") {
+      throw new Error(`Invalid provider observation freshness at index ${index}.`);
+    }
+    const sourceEndpoint = requireString(row.sourceEndpoint, `providerObservations[${index}].sourceEndpoint`);
+    if (sourceEndpoint !== `https://console.neon.tech/api/v2/projects/${configuredResourceId}`) {
+      throw new Error(`Invalid provider observation source endpoint at index ${index}.`);
+    }
+    return {
+      environmentProfileId,
+      provider: "neon",
+      resourceType: "project",
+      configuredResourceId,
+      resourceId,
+      displayName: requireNullableMetadata(row.displayName, `providerObservations[${index}].displayName`),
+      status: requireNullableMetadata(row.status, `providerObservations[${index}].status`),
+      observedAt: requireString(row.observedAt, `providerObservations[${index}].observedAt`),
+      checkedAt: requireString(row.checkedAt, `providerObservations[${index}].checkedAt`),
+      availability,
+      freshness,
+      sourceEndpoint,
+      sourceMetadata: requireProviderMetadata(row.sourceMetadata, `providerObservations[${index}].sourceMetadata`),
+      failureKind: requireNullableMetadata(row.failureKind, `providerObservations[${index}].failureKind`),
+    };
+  });
+  const providerEnvironmentIds = new Set<string>();
+  for (const observation of providerObservations) {
+    if (providerEnvironmentIds.has(observation.environmentProfileId)) {
+      throw new Error(`Duplicate provider observation environment identity in restore: ${observation.environmentProfileId}.`);
+    }
+    providerEnvironmentIds.add(observation.environmentProfileId);
   }
 
   const repositoryWorktrees: RepositoryWorktreeBackup[] = raw.repositoryWorktrees.map((item, index) => {
@@ -491,6 +627,7 @@ function validateRestoreDocument(value: unknown): ExportDocument {
     workspaces,
     credentialReferences,
     environmentProfiles,
+    providerObservations,
     repositoryWorktrees,
     repositoryObservations,
     auditEntries,
@@ -527,6 +664,7 @@ export function restoreState(store: Store, serialized: string): void {
   const retainedRecoveryAudit = listAuditEntries(store).filter((entry) => entry.operation === "state.restore");
 
   const replace = store.db.transaction(() => {
+    store.db.prepare("DELETE FROM provider_observations").run();
     store.db.prepare("DELETE FROM repository_observations").run();
     store.db.prepare("DELETE FROM repository_worktrees").run();
     store.db.prepare("DELETE FROM audit_entries").run();
@@ -590,6 +728,32 @@ export function restoreState(store: Store, serialized: string): void {
       );
       for (const setting of profile.settings) insertEnvironmentSetting.run(profile.id, setting.key, JSON.stringify(setting.value));
       for (const binding of profile.credentialBindings) insertEnvironmentBinding.run(profile.id, binding.key, binding.credentialReferenceId);
+    }
+
+    const insertProviderObservation = store.db.prepare(`
+      INSERT INTO provider_observations (
+        environment_profile_id, provider, resource_type, configured_resource_id, resource_id,
+        display_name, status, observed_at, checked_at, availability, freshness,
+        source_endpoint, source_metadata_json, failure_kind
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    for (const observation of document.providerObservations) {
+      insertProviderObservation.run(
+        observation.environmentProfileId,
+        observation.provider,
+        observation.resourceType,
+        observation.configuredResourceId,
+        observation.resourceId,
+        observation.displayName,
+        observation.status,
+        observation.observedAt,
+        observation.checkedAt,
+        observation.availability,
+        observation.freshness,
+        observation.sourceEndpoint,
+        JSON.stringify(observation.sourceMetadata),
+        observation.failureKind,
+      );
     }
 
     const insertWorktree = store.db.prepare(`

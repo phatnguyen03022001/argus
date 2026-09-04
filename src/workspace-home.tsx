@@ -1,5 +1,6 @@
 import { assessRepository, repositoryReasonText, safeFastForwardSyncPreview, sortRepositoryAssessments } from "./repository-assessment";
 import type { RepositoryView } from "./repository-observations";
+import type { NeonProjectObservation } from "./neon";
 import type { CredentialReferenceView, EnvironmentProfileView } from "./workspace-app";
 import type { WorkspaceRecord } from "./workspaces";
 
@@ -22,12 +23,14 @@ export function WorkspaceHome({
   repositories = [],
   credentials = [],
   environments = [],
+  neonProjects = [],
   error,
 }: {
   workspaces: WorkspaceRecord[];
   repositories?: RepositoryView[];
   credentials?: CredentialReferenceView[];
   environments?: EnvironmentProfileView[];
+  neonProjects?: NeonProjectObservation[];
   error?: string;
 }) {
   const labels = new Map(workspaces.map((workspace) => [workspace.id, workspace.label]));
@@ -159,6 +162,48 @@ export function WorkspaceHome({
           </label>
           <button type="submit" disabled={workspaces.length === 0}>Add environment profile</button>
         </form>
+      </section>
+
+      <section className="panel" aria-labelledby="neon-heading">
+        <div className="section-heading">
+          <h2 id="neon-heading">Neon project observation</h2>
+          <span>{neonProjects.length}</span>
+        </div>
+        <p className="empty">Read-only project metadata from the exact Neon project configured by an active environment profile.</p>
+        {neonProjects.length === 0 ? (
+          <p className="empty">No active environment profile has both NEON_PROJECT_ID and NEON_API_KEY configured.</p>
+        ) : (
+          <ul className="repository-list">
+            {neonProjects.map((project) => (
+              <li key={project.environmentProfileId} className="repository-row">
+                <div className="repository-title">
+                  <div>
+                    <small>{labels.get(project.workspaceId) ?? project.workspaceId} · {project.environmentName}</small>
+                    <strong>{project.name ?? project.configuredProjectId}</strong>
+                    <code>{project.configuredProjectId}</code>
+                  </div>
+                  <span>{project.status ?? "not observed"}</span>
+                </div>
+                <dl className="repository-facts">
+                  <div><dt>Provider project ID</dt><dd><code>{project.providerProjectId ?? "not observed"}</code></dd></div>
+                  <div><dt>Availability</dt><dd>{project.availability}</dd></div>
+                  <div><dt>Freshness</dt><dd>{project.freshness}</dd></div>
+                  <div><dt>Observed</dt><dd>{project.observedAt ?? "not observed"}</dd></div>
+                  <div><dt>Checked</dt><dd>{project.checkedAt ?? "not checked"}</dd></div>
+                  <div><dt>Region</dt><dd>{project.metadata.regionId ?? "unknown"}</dd></div>
+                  <div><dt>Platform</dt><dd>{project.metadata.platformId ?? "unknown"}</dd></div>
+                  <div><dt>Postgres</dt><dd>{project.metadata.pgVersion ?? "unknown"}</dd></div>
+                  <div><dt>Source</dt><dd><code>{project.sourceEndpoint}</code></dd></div>
+                  <div><dt>Last failure</dt><dd>{project.failureKind ?? "none"}</dd></div>
+                </dl>
+                <form action="/neon" method="post">
+                  <input type="hidden" name="environmentProfileId" value={project.environmentProfileId} />
+                  <button type="submit">Refresh Neon project</button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        )}
       </section>
 
       <section className="panel" aria-labelledby="configured-heading">
