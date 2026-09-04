@@ -1,0 +1,255 @@
+protocol_version: 3
+
+task_id: TASK-0005
+task_revision: 1
+state: APPROVED
+
+origin:
+  type: architect_planning
+  milestone: PHASE_3_GIT_REPO_CONTROL
+  slice: AUTHORITATIVE_RELATION_AND_SAFE_SYNC_PREVIEW
+
+architect_binding:
+  target_repository: phatnguyen03022001/argus
+
+target:
+  repository: phatnguyen03022001/argus
+  branch:
+    name: main
+    role: canonical
+
+execution_base:
+  mode: handoff_snapshot
+  capture: after_final_planning_commit
+  require_exact_match: true
+
+skill_library:
+  repository: phatnguyen03022001/agent-skills
+  revision: "4a063c41f429207577434600a3571dc17822cd78"
+
+architect_analysis_skills:
+  - architect
+  - simplicity
+  - verification
+
+execution_skills:
+  required:
+    - executor
+    - simplicity
+    - verification
+  recommended: []
+
+external_skills:
+  architect_analysis: []
+  execution_required: []
+  execution_recommended: []
+
+authority_sources:
+  - source: "phatnguyen03022001/argus@e534eeea87c76027111500304b1af0c3daa340bd"
+    role: >-
+      Accepted Phase 3 repository observation plus derived-health/attention target truth. Governs canonical GitHub
+      identity, fail-closed evidence semantics, explicit controlled-mutation preparation, and current no-sync boundary.
+    precedence: 1
+  - source: "phatnguyen03022001/agent-skills@4a063c41f429207577434600a3571dc17822cd78"
+    role: "Current protocol-v3 Executor, simplicity, verification, and Git/GitHub workflow authority."
+    precedence: 2
+
+structure_authority:
+  status: RESOLVED
+  source: >-
+    Extend the existing repository/GitHub observation and assessment surfaces in the current single-package app. Use
+    the smallest local component/test changes needed. No new top-level package/service, dependency, schema framework,
+    background worker, generic policy engine, mutation adapter, or shared orchestration abstraction is authorized.
+
+objective: >-
+  Make repository divergence classification and future fast-forward synchronization eligibility depend on current
+  GitHub-canonical commit relationship rather than potentially stale local remote-tracking refs. Observe the exact
+  relationship between current local HEAD and current GitHub ref through a read-only GitHub API contract, reconcile it
+  with provenance/freshness semantics, derive a fail-closed fast-forward sync preview, and surface the preview in the
+  existing UI without performing any Git/GitHub mutation.
+
+scope:
+  required_changes:
+    - >-
+      Extend the read-only GitHub observation boundary with one exact commit-relation observation between the current
+      local HEAD SHA and the current observed GitHub ref SHA for the same canonical GitHub repository/ref. Use the
+      source's compare/ancestry semantics or an equivalent GitHub read API; do not fetch or mutate local Git to learn
+      the relationship.
+    - >-
+      Normalize the relation into {IDENTICAL, LOCAL_AHEAD, LOCAL_BEHIND, DIVERGED, UNKNOWN} with exact repository
+      identity, local SHA, GitHub SHA, provenance, checked/observed time, availability/freshness, and source version or
+      immutable input-pair identity where semantically valid. Malformed, unavailable, rate-limited, or identity-mismatched
+      responses remain UNKNOWN/degraded evidence rather than optimistic classification.
+    - >-
+      Preserve the existing local ahead/behind observation as raw evidence, but repository sync-condition assessment
+      must prefer a current available non-conflicted GitHub-canonical relation when present. It must never override a
+      stronger degraded/conflict/identity gate and must not infer desired branch policy beyond the exact observed ref.
+    - >-
+      Add a pure `safe fast-forward sync preview` derived from current repository assessment plus exact relation and
+      evidence. Preview state is {ELIGIBLE, NOT_NEEDED, BLOCKED, UNKNOWN}. ELIGIBLE requires exactly LOCAL_BEHIND plus
+      current/available/non-conflicted canonical repository/ref/relation evidence, attached local HEAD, clean worktree,
+      exact local/GitHub SHAs, and no identity mismatch. NOT_NEEDED requires exact IN_SYNC. Dirty, detached, local-ahead,
+      diverged, mismatch/conflict, stale/unavailable evidence, or missing exact identity prevents eligibility.
+    - >-
+      Preview returns stable reason codes and the exact expected local pre-head plus expected GitHub target SHA that a
+      later mutation task would have to revalidate immediately before effect. Preview is derived/non-authoritative and
+      grants no mutation authority.
+    - >-
+      Surface the relation and sync preview in the existing repository/attention UI. The operator must be able to see
+      why sync is eligible or blocked and the exact pre/target SHAs. Do not render an enabled mutation button in this
+      task; a later task will add the explicit action only after this preview contract is accepted.
+    - >-
+      Keep all new external state as EXTERNAL_DERIVED_TRUTH observation/reconciliation data. A schema migration is
+      allowed only if the existing generic observation model cannot persist the new observation kind without schema
+      change; prefer the current observation table and no migration. Do not persist preview/health as source truth.
+    - >-
+      Add deterministic contract/domain/UI tests covering GitHub relation normalization for identical/ahead/behind/
+      diverged/unavailable/malformed cases, freshness/conflict propagation, assessment preference over stale local
+      tracking counts, and safe-sync preview eligibility/blocking for clean-behind, in-sync, dirty, detached, local-ahead,
+      diverged, stale/unavailable/conflicted, and identity-mismatch cases.
+    - >-
+      Preserve TASK-0003 read-only Git invariance and TASK-0004 assessment behavior. Run fresh frozen-lockfile install,
+      full repository-owned pnpm verify, bounded 127.0.0.1 production smoke with run-owned temporary Argus data, exact
+      diff/dependency/schema/secret/forward-scope inspection, publish one implementation commit plus one report-only
+      child on main, and stop at NEEDS_REVIEW.
+
+  allowed_existing_files_or_components:
+    - existing read-only GitHub observation adapter and repository observation model under src/
+    - existing repository assessment/domain projection surface under src/
+    - existing workspace/repository application/UI surfaces under src/ and app/
+    - existing tests under tests/
+    - README.md only if current Phase 3 wording becomes materially stale
+    - .agent/tasks/TASK-0005/report.yaml
+  expected_files_are_restrictive: false
+
+invariants:
+  - "GitHub remote main remains canonical repository truth and Argus topology remains exactly {main}."
+  - "TASK-0005 is observation + preview only; it performs no Git/GitHub mutation and grants no mutation authority."
+  - "No local fetch/pull/merge/rebase/reset/checkout/clean/stash/push or remote ref mutation is introduced."
+  - "Safe-sync preview is derived from current exact evidence and becomes invalid on any identity/ref/local-state drift."
+  - "Potentially stale local remote-tracking counts cannot override a current GitHub-canonical commit relationship."
+  - "Dirty, detached, diverged, local-ahead, conflicting, stale, unavailable, unknown, or identity-mismatched state cannot be marked sync-eligible."
+  - "No numeric score, hidden auto-sync queue, retry daemon, force path, or generic mutation command surface is introduced."
+  - "No secret value enters persistence, logs, UI, tests, reports, or repository artifacts."
+
+forbidden_changes:
+  - "Do not implement the actual fast-forward sync action, fetch, merge, reset, push, rebase, checkout, stash, clean, or force operation."
+  - "Do not add environment/Keychain, provider/resource, task/agent/business, deployment, or Phase 4+ capability."
+  - "Do not add dependencies, package boundaries, services, background polling/watchers, generic policy DSLs, mutation queues, or workflow engines."
+  - "Do not infer repository policy from default-branch names or local branch conventions beyond the exact observed ref relationship."
+  - "Do not create branches/tags/releases/workflows or mutate another repository."
+
+gap_policy:
+  local_auto_fix: true
+  scope_expansion: forbidden
+  architecture_change: forbidden
+  spec_change: forbidden
+  dependency_change: forbidden
+  public_contract_change: forbidden
+  blocking_gap_behavior: BLOCKED
+
+continuation_policy:
+  mode: MANUAL
+  stop_conditions:
+    - BLOCKED
+    - STALE_STATE
+    - AUTHORITY_REQUIRED
+    - CURRENT_PHASE_CAPABILITY_UNAVAILABLE
+    - REVIEW_REQUIRED
+    - REVERIFY_REQUIRED
+    - USER_STOP
+
+capability_requirements:
+  EXECUTION:
+    - exact_remote_ref_read
+    - repository_content_read
+    - repository_content_write
+    - native_local_execution
+    - filesystem_test_fixture_execution
+    - git_read_observation
+    - github_cli_read_observation
+    - package_install
+    - test_execution
+    - production_build_execution
+    - loopback_runtime_smoke
+    - exact_diff_inspection
+
+acceptance_criteria:
+  - id: AC-1
+    requirement: "GitHub-canonical local-vs-remote relation is normalized deterministically without local Git mutation."
+    evidence_required: >-
+      Adapter/fixture tests prove IDENTICAL, LOCAL_AHEAD, LOCAL_BEHIND, DIVERGED and UNKNOWN normalization from exact
+      GitHub read responses; malformed/unavailable cases fail closed and production source contains no Git mutation.
+  - id: AC-2
+    requirement: "Relation evidence has exact identity, provenance and freshness semantics."
+    evidence_required: >-
+      Persistence/reopen tests prove exact repository/ref/local-SHA/remote-SHA binding, provenance, observed/checked
+      time, availability/freshness and immutable input-pair/source-version semantics without creating a parallel truth model.
+  - id: AC-3
+    requirement: "Repository assessment prefers stronger current canonical relation evidence without hiding degradation."
+    evidence_required: >-
+      Matrix tests prove a fresh GitHub relation correctly classifies actual behind/ahead/diverged state even when local
+      remote-tracking counts are stale, while conflict/stale/unavailable/identity failures remain non-healthy/unknown.
+  - id: AC-4
+    requirement: "Safe fast-forward preview is exact, fail-closed and non-authoritative."
+    evidence_required: >-
+      Pure tests prove ELIGIBLE only for clean attached exact LOCAL_BEHIND state and expose exact expected pre-head and
+      target SHA; all dirty/detached/ahead/diverged/stale/unavailable/conflicted/mismatched cases are BLOCKED/UNKNOWN and
+      no preview performs an external side effect or grants authority.
+  - id: AC-5
+    requirement: "UI explains relation and future-sync eligibility without offering mutation."
+    evidence_required: >-
+      UI tests/render evidence show relation, preview state/reasons and exact SHAs alongside existing raw evidence; no
+      enabled sync/fetch/mutation control exists in TASK-0005.
+  - id: AC-6
+    requirement: "Accepted Phase 3 read-only and health invariants remain intact."
+    evidence_required: >-
+      Existing TASK-0003/TASK-0004 suites remain green; exact source/diff inspection finds no Git/GitHub mutation,
+      dependency expansion, secret surface, hidden health persistence, or Phase 4+ implementation.
+  - id: AC-7
+    requirement: "Implementation/report lineage and runtime evidence are exact."
+    evidence_required: >-
+      Frozen install, full pnpm verify, bounded production loopback smoke/hygiene PASS; implementation is direct child
+      of exact task base, report is its report-only child, final local/remote main match, zero tags and topology {main}.
+
+verification:
+  executor_checks:
+    - id: CHECK-1
+      command_or_check: "Fresh-preflight exact TASK-0005 revision/base/task blob, accepted TASK-0004 review identity, clean synchronized MAIN_ONLY local state, and current required capabilities before mutation."
+      required: true
+    - id: CHECK-2
+      command_or_check: "Run GitHub relation adapter/normalization fixtures including malformed/unavailable/error responses and exact immutable identity binding."
+      required: true
+    - id: CHECK-3
+      command_or_check: "Run assessment + safe-sync-preview matrix tests proving stronger-current relation preference and all fail-closed eligibility cases."
+      required: true
+    - id: CHECK-4
+      command_or_check: "Run UI/render tests showing relation/preview/reasons/exact SHAs with no mutation control and preserved raw evidence."
+      required: true
+    - id: CHECK-5
+      command_or_check: "Run existing repository observation/read-only/health regression suites, fresh pnpm install --frozen-lockfile, full pnpm verify, then bounded 127.0.0.1 production smoke using only run-owned temporary Argus data."
+      required: true
+    - id: CHECK-6
+      command_or_check: "Inspect exact diff, schema/migrations, dependencies, production Git/GitHub command/API boundaries, secrets, runtime artifacts and forward-scope terms; require no actual synchronization/mutation or Phase 4+ expansion."
+      required: true
+    - id: CHECK-7
+      command_or_check: "Publish one implementation commit plus one report-only child; re-resolve final remote main, parent/diffs, task/report blobs, clean local state, zero tags and topology exactly {main}."
+      required: true
+  authoritative_verification:
+    required: false
+    mechanism: ""
+    expected_signal: ""
+
+git_authority:
+  create_branch: false
+  commit: true
+  push: true
+  promote_to_main: false
+
+release_authority:
+  create_version_tag: false
+  mutate_repository_metadata: false
+  publish_release: false
+
+blocking_decisions: []
+execution_ready: true
