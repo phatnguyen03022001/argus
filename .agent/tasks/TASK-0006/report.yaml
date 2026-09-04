@@ -1,0 +1,225 @@
+protocol_version: 3
+
+task_id: TASK-0006
+task_revision: 1
+report_revision: 1
+state: REPORTED
+
+task_source:
+  path: .agent/tasks/TASK-0006/task.yaml
+  blob: "90f1cef8a48544196523dccdf94c1cc18857cdcb"
+
+execution:
+  repository: phatnguyen03022001/argus
+  branch:
+    name: main
+    role: canonical
+  authorized_base_head: f1677283e62b0f135ed3c9a16554f4b7cb81cad7
+  pre_execution_head: f1677283e62b0f135ed3c9a16554f4b7cb81cad7
+  final_execution_head: 3e4fd91adbac7878a351afc1d165050627945bd5
+
+skill_library:
+  repository: phatnguyen03022001/agent-skills
+  authorized_revision: "4a063c41f429207577434600a3571dc17822cd78"
+  observed_revision: "4a063c41f429207577434600a3571dc17822cd78"
+
+execution_skills_used:
+  required:
+    - executor
+    - simplicity
+    - verification
+  recommended: []
+  external: []
+
+pre_execution_checks:
+  protocol_version_supported: true
+  task_revision_confirmed: true
+  task_identity_confirmed: true
+  accepted_task_0005_review_confirmed: true
+  repository_confirmed: true
+  branch_confirmed: true
+  base_head_confirmed: true
+  remote_main_confirmed: true
+  main_only_topology_confirmed: true
+  zero_tags_confirmed: true
+  skill_revision_confirmed: true
+  required_execution_skills_available: true
+  structure_authority_confirmed: true
+  working_tree_clean: true
+
+capability_preflight:
+  phase: EXECUTION
+  required:
+    - exact_remote_ref_read
+    - repository_content_read
+    - repository_content_write
+    - native_local_execution
+    - filesystem_test_fixture_execution
+    - macos_keychain_isolated_fixture_execution
+    - package_install
+    - test_execution
+    - production_build_execution
+    - loopback_runtime_smoke
+    - exact_diff_inspection
+  available:
+    - exact_remote_ref_read
+    - repository_content_read
+    - repository_content_write
+    - native_local_execution
+    - filesystem_test_fixture_execution
+    - macos_keychain_isolated_fixture_execution
+    - package_install
+    - test_execution
+    - production_build_execution
+    - loopback_runtime_smoke
+    - exact_diff_inspection
+  missing: []
+  passed: true
+
+local_hygiene:
+  result: PASS
+  run_root: /tmp/argus-task0006-final-smoke.EMH9Kq
+  cleanup_performed: true
+  retained: []
+  evidence: >-
+    Native capability preflight used only the run-owned isolated keychain fixture below
+    /tmp/argus-task0006-preflight.6ELMXN, created and resolved one uniquely identified generic-password item through an
+    explicit non-login keychain path, deleted that keychain, and removed the fixture root. Final production smoke used
+    run-owned HOME /tmp/argus-task0006-final-smoke.EMH9Kq on 127.0.0.1:33435, returned HTTP 200 with the credential
+    reference UI and no password input, terminated the built application, and removed the exact temporary root after
+    realpath/prefix/non-symlink cleanup checks. No execution artifact was retained.
+
+commits_created:
+  - sha: 3e4fd91adbac7878a351afc1d165050627945bd5
+    parent: f1677283e62b0f135ed3c9a16554f4b7cb81cad7
+    message: "feat: add credential reference keychain boundary"
+
+pushed: false
+promoted_to_main: false
+
+authoritative_verification:
+  required: false
+  performed: false
+  result: NOT_REQUIRED
+  evidence: "Task authority does not designate an authoritative verifier for this execution phase."
+
+acceptance_evidence:
+  - criterion_id: AC-1
+    status: PASS
+    evidence: >-
+      Schema version 3 adds only credential-reference identity, intended external system, Keychain service/account locator,
+      optional label, lifecycle timestamps, archived state, and optimistic version. Migration coverage constructs a valid
+      schema-2 store, reopens it through the production migrator at schema 3, checks the exact credential table columns,
+      preserves unsupported-newer and transactional rollback behavior, and proves no secret-shaped credential column.
+      Lifecycle coverage proves generated stable UUID identity, active-locator uniqueness, create/list/archive semantics,
+      exact expected-version conflict handling, deterministic archive timestamps, and success/rejection audit evidence.
+  - criterion_id: AC-2
+    status: PASS
+    evidence: >-
+      Export format version 1 now carries credential references plus the existing workspace, audit, repository-worktree,
+      and repository-observation state. Restore validates credential UUIDs, metadata, lifecycle/version, cross-app-native
+      identity collisions, active-locator duplicates, repository relationships, observation enums/JSON, audit relationships,
+      duplicate identities/events, and integrity before transactional replacement. Tests prove credential and repository
+      state round-trip together, malformed inputs leave existing state intact, and a generated fixture credential value is
+      absent from serialized export/restore content.
+  - criterion_id: AC-3
+    status: PASS
+    evidence: >-
+      The production broker accepts a credential reference plus explicit operation context and returns only reference ID,
+      operation, and AVAILABLE/UNAVAILABLE. Fake-adapter tests prove secret bytes exist only inside the scoped consumer,
+      ordinary results never contain the generated fixture value, consumer exceptions become the fixed safe error
+      "Credential consumer failed.", adapter exceptions fail closed as UNAVAILABLE, and malformed service/account locator
+      metadata returns UNAVAILABLE before the production Keychain subprocess or consumer boundary is entered.
+  - criterion_id: AC-4
+    status: PASS
+    evidence: >-
+      macOS 26.6.2 native coverage creates a uniquely named run-owned temporary non-login keychain, adds exactly one
+      run-owned generic-password item, resolves it through MacOSKeychainAdapter using the explicit fixture keychain path,
+      consumes it only to calculate an in-process digest, deletes the keychain, and proves the fixture path is gone. The
+      test and capability preflight never enumerate or read operator login-keychain contents.
+  - criterion_id: AC-5
+    status: PASS
+    evidence: >-
+      The server-rendered local UI and /credentials POST route expose only external-system, Keychain service/account,
+      optional label, version, archive action, and AVAILABLE/UNAVAILABLE status. Render/route tests prove create and
+      archive behavior while mechanically rejecting password input, secret/token/password/private-key field names,
+      reveal/copy controls, and generated fixture-secret rendering. Availability uses the same Keychain broker as scoped
+      resolution and carries no browser-visible secret payload.
+  - criterion_id: AC-6
+    status: PASS
+    evidence: >-
+      A per-run randomly generated fixture credential value is mechanically checked absent from credential SQLite logical
+      rows, raw SQLite bytes, export JSON, audit serialization, rendered UI, safe consumer/adapter result/error objects,
+      exact repository diff, and the TASK-0006 report candidate when present. Restore recursively rejects secret-shaped
+      document keys. Production-source inspection finds no logging/client-storage/file-secret path and only
+      find-generic-password under the Keychain boundary; secret buffers and captured subprocess buffers are zeroed after
+      use. Existing repository observation/assessment regressions remain green.
+  - criterion_id: AC-7
+    status: PENDING_POST_PUBLICATION
+    evidence: >-
+      Fresh pnpm install --frozen-lockfile passed with no package.json or pnpm-lock.yaml change. Final pnpm verify on
+      Node 24.19.0 / pnpm 11.24.0 passed TypeScript, 7/7 Vitest files and 28/28 tests, and the Next.js 16.3.3 optimized
+      production build. Final built-app smoke passed HTTP 200 on 127.0.0.1:33435 with run-owned data and exact cleanup.
+      Exact staged inspection passes git diff --check, contains no dependency change, no production Keychain create/add/
+      delete operation, and no provider/.env/Phase5+/worker/queue/daemon/deployment expansion. Implementation is the sole
+      direct child of the exact task base. This report-only child must now be committed and pushed before final remote/local
+      lineage and topology re-resolution.
+
+executor_checks:
+  - check_id: CHECK-1
+    result: PASS
+    evidence: >-
+      Before mutation, local HEAD and canonical GitHub main resolved to
+      f1677283e62b0f135ed3c9a16554f4b7cb81cad7; TASK-0006 revision 1 blob was
+      90f1cef8a48544196523dccdf94c1cc18857cdcb; TASK-0005 revision 1 review was ACCEPTED; topology was exactly {main};
+      tags were empty; the pinned agent-skills revision and all required execution capabilities were resolved. Native
+      macOS/Keychain preflight completed against only a run-owned isolated keychain before repository mutation.
+  - check_id: CHECK-2
+    result: PASS
+    evidence: >-
+      tests/credential.test.tsx and tests/workspace.test.ts prove schema-2-to-3 migration/reopen, rollback and newer-schema
+      rejection, credential create/list/archive/version/duplicate validation, audit semantics, exact export/restore
+      round-trip, malformed/duplicate rejection, and preservation of repository worktree/observation data.
+  - check_id: CHECK-3
+    result: PASS
+    evidence: >-
+      Fake Keychain boundary coverage proves transient consumer-only secret access, fixed safe consumer failure, adapter
+      failure and malformed-locator fail-closed behavior. Native macOS coverage proves production resolution from only a
+      unique isolated temporary keychain and exact fixture deletion without login-keychain enumeration.
+  - check_id: CHECK-4
+    result: PASS
+    evidence: >-
+      UI/route coverage proves non-secret reference metadata plus AVAILABLE/UNAVAILABLE only. The generated fixture secret
+      is mechanically absent from SQLite logical/raw data, export/audit, UI markup, result/error objects, repository diff,
+      and report candidate; secret-shaped restore fields are rejected.
+  - check_id: CHECK-5
+    result: PASS
+    evidence: >-
+      pnpm install --frozen-lockfile passed. Final pnpm verify passed 7/7 test files and 28/28 tests, TypeScript, and
+      production build on Node 24.19.0 / pnpm 11.24.0. Final production startup bound only to 127.0.0.1:33435, returned
+      HTTP 200 with expected credential-reference content, and the exact run-owned HOME was removed afterward.
+  - check_id: CHECK-6
+    result: PASS
+    evidence: >-
+      Exact base-to-implementation inspection and git diff --check pass. package.json and pnpm-lock.yaml are unchanged;
+      credential schema has no secret field; production src/app contains only find-generic-password for Keychain access;
+      no Keychain item creation/rotation/deletion, provider/OAuth implementation, .env materialization, alternate secret
+      store, branch/tag/release/workflow/deployment, worker, queue, watcher, daemon, or later-phase capability is added.
+  - check_id: CHECK-7
+    result: PENDING_POST_PUBLICATION
+    evidence: >-
+      Implementation 3e4fd91adbac7878a351afc1d165050627945bd5 is the direct child of exact base
+      f1677283e62b0f135ed3c9a16554f4b7cb81cad7. This report must become its report-only child and be published before
+      final GitHub main, local/origin main, parents/diffs, task/report blobs, zero tags, and {main} topology are re-resolved.
+
+discovered_gaps: []
+structural_observations: []
+deviations_from_task: []
+blockers: []
+
+working_tree_after:
+  clean: false
+  summary: "Only .agent/tasks/TASK-0006/report.yaml remains to be committed as the required report-only child."
+
+result: NEEDS_REVIEW
+review_write: false
