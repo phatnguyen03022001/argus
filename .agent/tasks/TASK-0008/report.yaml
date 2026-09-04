@@ -1,0 +1,141 @@
+protocol_version: 3
+
+task_id: TASK-0008
+task_revision: 1
+report_revision: 1
+state: REPORTED
+
+task_source:
+  path: .agent/tasks/TASK-0008/task.yaml
+  blob: "ad6944e41e0e663e8fff917cbeffd253ee1f349a"
+
+execution:
+  repository: phatnguyen03022001/argus
+  branch:
+    name: main
+    role: canonical
+  authorized_base_head: "8824407cd92f97c748915665239fbe83ae02bb15"
+  final_execution_head: "ee33c8e7003bf5c7e0c4e646055073148f2df161"
+
+skill_library:
+  repository: phatnguyen03022001/agent-skills
+  authorized_revision: "db03b97b5c42c9c64ad8dce76bc694530e41a206"
+
+capability_preflight:
+  phase: EXECUTION
+  required:
+    - exact_remote_ref_read
+    - repository_content_read
+    - repository_content_write
+    - native_local_execution
+    - package_install
+    - test_execution
+    - production_build_execution
+    - loopback_runtime_smoke
+    - exact_diff_inspection
+  available:
+    - exact_remote_ref_read
+    - repository_content_read
+    - repository_content_write
+    - native_local_execution
+    - package_install
+    - test_execution
+    - production_build_execution
+    - loopback_runtime_smoke
+    - exact_diff_inspection
+  missing: []
+  passed: true
+
+local_hygiene:
+  result: PASS
+  cleanup_performed: true
+  retained: []
+  evidence: >-
+    The expired prior smoke PTY had no surviving process. Its exact run-owned temporary directory was proven non-symlink,
+    contained only run-owned cache data, and was removed. Final production smoke used a fresh run-owned /private/tmp root,
+    bound only to 127.0.0.1:33439, returned HTTP 200 with Neon UI content, terminated the server, and removed the root.
+
+authoritative_verification:
+  required: false
+  performed: false
+  result: NOT_REQUIRED
+  evidence: "TASK-0008 designates repository-native deterministic verification; no separate authoritative verifier is required."
+
+pushed: true
+
+acceptance_evidence:
+  - criterion_id: AC-1
+    status: PASS
+    evidence: >-
+      Neon configuration resolves only from an active EnvironmentProfile with exact non-secret NEON_PROJECT_ID plus
+      NEON_API_KEY credential binding. Targeted tests prove missing/malformed configuration and inactive credential
+      references fail closed; production Neon code does not infer configuration from process environment or Git refs.
+  - criterion_id: AC-2
+    status: PASS
+    evidence: >-
+      Neon adapter performs only GET https://console.neon.tech/api/v2/projects/{projectId}, constructs Bearer authorization
+      only inside the scoped Keychain consumer, uses AbortController timeout, redirect:error, bounded JSON response size,
+      strict content/schema validation, and exact returned project-ID matching. Targeted Neon suite passed 5/5 across
+      success, auth/not-found/rate-limit/server/network/timeout/content/schema/identity failure paths with secret-safe errors.
+  - criterion_id: AC-3
+    status: PASS
+    evidence: >-
+      Provider observation persistence stores only normalized Neon project identity, display/status metadata, timestamps,
+      availability/freshness, source endpoint/provenance metadata, and failure kind. Tests prove failed refresh does not
+      replace a known-valid snapshot and instead retains last-known value as stale while current availability degrades.
+      Export/restore preserves the normalized observation relationship without raw provider response or secret material.
+  - criterion_id: AC-4
+    status: PASS
+    evidence: >-
+      Existing local UI exposes workspace/environment identity, configured Neon project ID, normalized project metadata,
+      observed-at, availability/freshness and an explicit refresh action. The internal POST /neon route only triggers the
+      local read-only observation path; outbound Neon transport remains GET-only. No provider mutation, connection string,
+      API-key, reveal/copy, polling, or generic provider-manager surface is present.
+  - criterion_id: AC-5
+    status: PASS
+    evidence: >-
+      Runtime-random Neon API-key proof passed across SQLite logical/raw bytes, normalized observations, export/restore,
+      audit/UI/HTTP/error/repository/report-candidate surfaces. Full repository verification passed 9 test files / 37 tests,
+      TypeScript and Next.js production build on Node 24.19.0 / pnpm 11.24.0; prior Keychain/environment/repository boundaries
+      remain green. No dependency/SDK/provider framework/background process/provider mutation was added.
+  - criterion_id: AC-6
+    status: NOT_PROVEN
+    evidence: >-
+      Pre-publication evidence is complete: frozen install passed, targeted Neon 5/5 and full 37/37 tests passed,
+      pnpm typecheck and pnpm verify including Next.js production build passed, final loopback smoke/cleanup passed,
+      git diff --check and exact forward-scope/security inspection passed, and implementation
+      ee33c8e7003bf5c7e0c4e646055073148f2df161 is remotely published as the direct child of exact base. This report does
+      not self-attest the publication of the commit that contains itself; report-child remote identity/topology/hygiene are
+      resolved after publication.
+
+executor_checks:
+  - check_id: CHECK-1
+    result: PASS
+    evidence: >-
+      Exact TASK-0008/base, accepted TASK-0007 review, active agent-skills pin, MAIN_ONLY {main} topology, zero tags,
+      synchronized clean base and every required EXECUTION capability were proven before implementation mutation.
+  - check_id: CHECK-2
+    result: PASS
+    evidence: >-
+      Targeted Neon suite passed 5/5 using deterministic local HTTP fakes. Conditional live Neon GET was truthfully omitted
+      as CREDENTIAL_UNAVAILABLE; no live request was sent and no credential was created or requested.
+  - check_id: CHECK-3
+    result: PASS
+    evidence: >-
+      Repository-native verification passed 37/37 tests, TypeScript, production build, plus bounded exact-diff/security
+      checks. Independent deterministic checks were kept bounded; no redundant focused-before-full rerun was performed
+      after the unchanged implementation had already passed the mandatory full verifier.
+  - check_id: CHECK-4
+    result: PASS
+    evidence: >-
+      Final built-app smoke on 127.0.0.1:33439 returned HTTP 200 with Neon content and run-owned cleanup PASS. Final source
+      inspection proved outbound Neon GET-only behavior, no SDK/dependency change, no process-env inference, no secret
+      persistence fields, no generic provider registry/poller/worker, and no provider mutation surface.
+  - check_id: CHECK-5
+    result: NOT_PROVEN
+    evidence: >-
+      Implementation publication is independently proven at remote main=ee33c8e7003bf5c7e0c4e646055073148f2df161
+      with parent exact base 8824407cd92f97c748915665239fbe83ae02bb15. This same report cannot predict its own remote
+      publication; final report-child identity, topology, zero tags and terminal local/origin cleanliness are checked after push.
+
+result: NEEDS_REVIEW
