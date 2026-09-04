@@ -1,0 +1,264 @@
+protocol_version: 3
+
+task_id: TASK-0009
+task_revision: 1
+state: APPROVED
+
+origin:
+  type: operator_request
+  milestone: ENGINEERING_MVP_OPERATOR_DASHBOARD_CONVERGENCE
+
+architect_binding:
+  target_repository: phatnguyen03022001/argus
+
+target:
+  repository: phatnguyen03022001/argus
+  branch:
+    name: main
+    role: canonical
+
+execution_base:
+  mode: handoff_snapshot
+  capture: after_final_planning_commit
+  require_exact_match: true
+
+skill_library:
+  repository: phatnguyen03022001/agent-skills
+  revision: "db03b97b5c42c9c64ad8dce76bc694530e41a206"
+
+execution_skills:
+  required:
+    - executor
+    - simplicity
+    - verification
+
+structure_authority:
+  status: RESOLVED
+  source: >-
+    Converge the existing single-package Next.js/TypeScript/SQLite Argus foundation into one usable operator dashboard.
+    Reuse current repository observation, workspace, EnvironmentProfile, credential/Keychain, Neon and recovery boundaries.
+    Internal page/component decomposition, CSS, dictionaries, GitHub-specific adapters and small app-native watch/config
+    records are Executor-local HOW. No UI framework/component-library dependency, generic provider framework, scheduler,
+    daemon, queue, workflow engine, background monitor, cloud control plane or new service is authorized.
+
+objective: >-
+  Make Argus usable as the operator's daily local control dashboard in Vietnamese or English. Show the complete GitHub
+  repository inventory available to one explicitly selected GitHub credential, let the operator add repositories to an
+  Argus watchlist for deeper explicit refresh/detail, unify watched GitHub and matched local repository status, compare a
+  watched local repository's .env.example key contract with a linked Argus EnvironmentProfile, and let the operator safely
+  provision ordinary environment settings and Keychain-owned secret values from the app. Replace the current one-page
+  foundation dump with a clear responsive information architecture. No target .env file is written by this task.
+
+authority_sources:
+  - source: "operator request in governing Architect context"
+    role: >-
+      Explicitly requests one task for Vietnamese/English UI, full GitHub repository inventory and detailed watchlist,
+      environment drift against .env.example, environment viewing/provisioning in-app, and substantial UI presentation improvement.
+    precedence: 1
+  - source: "accepted TASK-0008 review e98a8593cd532c068c7bf070676e2b36cf3bcebe"
+    role: "current accepted Argus foundation including read-only GitHub/local observation, EnvironmentProfile/Keychain and Neon boundaries"
+    precedence: 2
+
+scope:
+  required_changes:
+    - >-
+      Add built-in `vi` and `en` UI dictionaries with no translation dependency. Every operator-facing primary navigation,
+      page heading, status label, empty/error state and form action introduced or retained by this slice must render through
+      the active locale. Default to Vietnamese for this operator and provide an explicit VN/EN toggle whose preference is
+      local non-authoritative UI state; locale never affects repository/provider identity or stored engineering truth.
+    - >-
+      Replace the current single long home page with a responsive operator shell and clear primary destinations at minimum:
+      Overview, Repositories, Environments, Credentials, and Providers. Preserve existing capabilities while moving them to
+      the appropriate page. Overview emphasizes counts/attention/drift instead of duplicating every detail. Layout must be
+      usable at narrow phone width and normal desktop width, with coherent spacing/typography/status hierarchy and no new
+      CSS/component-framework dependency.
+    - >-
+      Add a read-only GitHub inventory adapter using one explicitly selected active credential reference whose secret is
+      resolved through the existing Keychain boundary. Use authenticated `GET /user/repos`, follow documented pagination
+      until exhaustion with `per_page=100` and a bounded safety cap, and normalize all repositories accessible to that
+      credential. Persist only bounded last-known EXTERNAL_DERIVED_TRUTH required for offline inventory: GitHub repository
+      immutable numeric ID, full-name alias, visibility/private state, archived/disabled/fork flags, default branch,
+      pushed/updated timestamps, HTML/source identity, observed/checked timestamps, availability/freshness and safe failure kind.
+      Do not persist raw responses or token/header material.
+    - >-
+      Add explicit GitHub inventory refresh only; no polling/background monitor. Inventory failure must preserve last-known
+      rows as stale and surface current availability truthfully. Pagination must reject loops/host changes/oversized or
+      malformed pages and remain bounded. GitHub authentication/permission failure degrades inventory without changing
+      app-native watchlist truth.
+    - >-
+      Add durable Argus-owned RepositoryWatch records keyed by stable Argus ID and exact GitHub repository numeric identity,
+      with add/remove/archive lifecycle, timestamps and optimistic versioning. Watching is an Argus preference only; do not
+      call GitHub's repository subscription/watch mutation API. Repository rename must preserve watch identity by numeric ID.
+      Watchlist records are included in export/restore with duplicate/orphan validation.
+    - >-
+      Repositories UI must show the complete last-known GitHub inventory with search/filter and material status dimensions:
+      full name, visibility, archived/disabled/fork, default branch, pushed/updated time, current GitHub availability/freshness,
+      watched state, and matched-local state when a canonical local worktree is known. Permit add/remove watchlist actions
+      without mutating GitHub. Remote-only repositories remain valid inventory/watch entries.
+    - >-
+      For each watched repository, provide a detail surface with explicit refresh. Resolve the exact repository by GitHub
+      numeric identity; fetch default-branch head/branch metadata and optionally the latest default-branch GitHub Actions
+      run when current credential permission allows it. Actions status is optional evidence: missing Actions permission is
+      displayed as unavailable/not-authorized and never blocks repository inventory/detail. Merge in existing matched local
+      worktree evidence when present: local path, current branch/detached/upstream, dirty state, ahead/behind/diverged/sync,
+      health/attention/reasons and observation freshness. Do not mutate Git refs/repositories.
+    - >-
+      Add an explicit relation from a watched repository with a matched local worktree to one or more existing
+      EnvironmentProfiles rather than redefining EnvironmentProfile identity or inferring environment from Git branch.
+      Existing workspace-scoped profiles remain valid. Linking/unlinking is APP_NATIVE_TRUTH with optimistic versioning and
+      export/restore coverage.
+    - >-
+      For a linked local watched repository, read `.env.example` as read-only EXTERNAL_DERIVED_TRUTH and parse only its key
+      contract plus safe non-secret example/default text when unambiguously non-secret. Never follow symlinks outside the
+      exact worktree, never read `.env` secret values for comparison, and never persist/echo secret example values. Drift
+      compares template keys against the linked EnvironmentProfile's ordinary setting keys and credential-binding keys and
+      reports at minimum `MATCHED`, `MISSING`, `EXTRA`, and `WRONG_KIND` (obvious secret-shaped template key stored as an
+      ordinary setting). Missing `.env.example` is `NOT_APPLICABLE`, not failure.
+    - >-
+      Use fail-safe secret classification for obvious credential material (including password/token/secret/private-key/
+      api-key/credential/auth/connection-string/DSN/database-URL shaped keys). The operator may explicitly mark any other key
+      as secret. Secret drift/status shows only binding/reference identity and `SET`, `MISSING` or `UNAVAILABLE`; secret
+      plaintext is never rendered, returned after submission, logged, audited, exported, persisted in SQLite, or copied to
+      repository artifacts.
+    - >-
+      Add in-app EnvironmentProfile provisioning/editing. Ordinary keys may be created/updated/removed with optimistic
+      versioning. Secret keys bind to an active CredentialReference and may accept a write-only secret input that is written
+      directly to the exact macOS Keychain service/account. Keychain write must use a mechanism that does not place secret
+      material in process argv, ordinary environment variables, temp files, logs or returned results. If `/usr/bin/security`
+      is used, invoke `add-generic-password ... -w` with `-w` last and supply the secret only through the child's stdin prompt;
+      never use insecure `-w <secret>`/`-p <secret>` argv forms. Updating an existing exact item is allowed; enumeration,
+      broad delete, login-keychain scanning, credential export and secret reveal are forbidden.
+    - >-
+      Keychain write and EnvironmentProfile/binding update must fail closed. Do not claim atomic cross-system transaction:
+      validate all app-native preconditions before the Keychain write, write only the exact credential item, then persist the
+      profile/binding with independently verified availability. If post-Keychain app-native persistence fails, report a
+      truthful partial outcome requiring operator attention; never silently roll back/delete an existing Keychain secret.
+      Audit metadata contains only credential-reference identity, operation, outcome/reason and profile version identities.
+    - >-
+      Add isolated native macOS Keychain integration tests for secret create/update/read availability using a run-owned
+      temporary keychain only; never enumerate or mutate the operator login keychain in tests. Mechanically prove a
+      runtime-random GitHub/ENV secret never appears in argv inspection fixtures, SQLite logical/raw bytes, exports,
+      audit/error/UI/HTTP results, Git diff or report candidate.
+    - >-
+      Update the minimum canonical product/behavior/data/interface/delivery documentation needed to persist these operator
+      decisions: GitHub inventory is derived truth, watchlist/link/locale preference ownership, `.env.example` drift is
+      key-contract observation, Keychain remains secret owner, and target `.env` materialization remains explicitly outside
+      this task. Do not broaden provider, mutation, deployment, agent/task projection or business scope.
+
+  allowed_existing_files_or_components:
+    - existing Next.js app shell/routes/styles and local UI components
+    - existing workspace/repository observation/assessment components
+    - existing EnvironmentProfile, credential-reference and Keychain components
+    - existing persistence/recovery/audit/application components
+    - one GitHub inventory/detail adapter and source-specific UI/application components
+    - small app-native repository-watch and repository-environment-link components
+    - built-in locale dictionaries/helpers
+    - relevant foundation docs, README and tests
+    - .agent/tasks/TASK-0009/report.yaml
+
+invariants:
+  - "GitHub remains canonical repository truth; inventory/detail rows are EXTERNAL_DERIVED_TRUTH and watchlist is APP_NATIVE_TRUTH."
+  - "Argus watchlist never mutates GitHub subscription/watch state and no background monitoring/polling is introduced."
+  - "Environment remains explicit and never inferred from Git branch/ref identity."
+  - "`.env.example` is read only as a key/schema expectation; target `.env` is not read for secret comparison and is never written/materialized by this task."
+  - "Secret values remain owned by macOS Keychain and never become ordinary Argus persistence, export, audit, logs, HTTP results, UI-readable state, process argv/env or repository artifacts."
+  - "Locale affects presentation only and never canonical identity, stored repository/provider evidence or authority."
+  - "No new package/service, generic provider/GitHub framework, scheduler, daemon, queue, worker, workflow engine, cloud service, branch, tag or release."
+  - "Topology remains MAIN_ONLY exactly {main}."
+
+forbidden_changes:
+  - "Do not write, generate, normalize, overwrite, merge, delete or otherwise materialize target `.env` files."
+  - "Do not read/display plaintext values from target `.env`, Keychain, GitHub token or another credential after submission."
+  - "Do not place a secret in `/usr/bin/security -w <secret>` argv, shell command text, process environment, temporary file, log, audit or test fixture committed to Git."
+  - "Do not use GitHub repository subscription/watch mutation endpoints; Argus watchlist is local-only APP_NATIVE_TRUTH."
+  - "Do not add GitHub repo mutation, branch mutation, workflow dispatch, issue/PR mutation, provider mutation, deployment control or Phase 6+ authority/task execution."
+  - "Do not add WebSocket/SSE polling loops, timers, background refresh, cron, daemon, worker, queue, scheduler or monitoring service."
+  - "Do not add React/UI/i18n/GitHub SDK dependencies merely for this task."
+
+capability_requirements:
+  EXECUTION:
+    - exact_remote_ref_read
+    - repository_content_read
+    - repository_content_write
+    - native_local_execution
+    - package_install
+    - test_execution
+    - production_build_execution
+    - loopback_runtime_smoke
+    - exact_diff_inspection
+    - isolated_macos_keychain_fixture
+
+acceptance_criteria:
+  - id: AC-1
+    requirement: "VN/EN responsive operator information architecture replaces the one-page foundation dump without losing accepted capability."
+    evidence_required: >-
+      UI tests and production smoke prove locale toggle/default Vietnamese, translated navigation/status/forms, Overview plus
+      separated Repository/Environment/Credential/Provider destinations, no duplicate mega-page, accessible labels, and
+      responsive CSS behavior without a new UI/i18n dependency.
+  - id: AC-2
+    requirement: "GitHub inventory returns the full credential-accessible repository set as bounded derived truth."
+    evidence_required: >-
+      Deterministic paginated API tests prove GET /user/repos traversal through final page, per-page bound, loop/host/size/
+      schema failure handling, stable numeric repository identity, stale last-known retention and zero token/raw-response
+      persistence. UI tests prove complete inventory/status/filter rendering.
+  - id: AC-3
+    requirement: "Local Argus watchlist and detailed watched-repository observation are identity-safe and mutation-free."
+    evidence_required: >-
+      Persistence/recovery tests prove add/remove/archive/rename-stable watch records; watched detail proves exact default
+      branch/head plus optional Actions evidence and matched existing local sync/health/attention without GitHub/Git mutation,
+      polling or subscription API calls.
+  - id: AC-4
+    requirement: "`.env.example` drift is explicit, repository-bound and secret-safe."
+    evidence_required: >-
+      Tests cover exact worktree containment/symlink rejection, parser behavior, absent template NOT_APPLICABLE, explicit
+      repository-environment links, MATCHED/MISSING/EXTRA/WRONG_KIND outcomes, branch independence, secret-shaped key
+      handling and no target `.env` value read/materialization.
+  - id: AC-5
+    requirement: "In-app environment and Keychain provisioning is write-only for secrets and fail-closed."
+    evidence_required: >-
+      Domain/route tests prove ordinary setting edits with optimistic versioning, secret binding edits, secure child-stdin
+      Keychain write with no secret argv/env/temp/log/result exposure, exact-item availability verification, truthful partial
+      outcome on post-Keychain persistence failure, and isolated temporary-Keychain create/update/read cleanup proof.
+  - id: AC-6
+    requirement: "Durability/security boundaries and existing Phase 2-5 behavior remain intact."
+    evidence_required: >-
+      Forward migration/reopen/export/restore covers watch/link APP_NATIVE_TRUTH; full repository regression including
+      repository/environment/credential/Neon/native-Keychain tests remains green; runtime-random secret non-leak proof and
+      exact dependency/forward-scope inspection pass.
+  - id: AC-7
+    requirement: "Implementation and canonical publication remain proportional and exact."
+    evidence_required: >-
+      Frozen install, mandatory full pnpm verify, production loopback smoke, exact diff/UI/security inspection, one direct
+      implementation child and one report-only child, fresh remote proof, topology {main}, zero tags and final local hygiene.
+
+verification:
+  executor_checks:
+    - id: CHECK-1
+      command_or_check: "Fresh-preflight exact TASK-0009/base, accepted TASK-0008 review, active agent-skills pin, clean synchronized MAIN_ONLY target and all required current EXECUTION capabilities."
+      required: true
+    - id: CHECK-2
+      command_or_check: "Use TDD for GitHub pagination/watch identity, env-example drift, secure Keychain write/partial failure and locale/navigation behavior; focused checks remain causal or distinct acceptance evidence only."
+      required: true
+    - id: CHECK-3
+      command_or_check: "Run deterministic GitHub API tests entirely against bounded local fakes. A live GitHub read may run only when an operator-configured credential already exists; no credential is created/requested for testing and live absence is not a blocker."
+      required: true
+    - id: CHECK-4
+      command_or_check: "Run isolated native Keychain create/update/read proof only in a run-owned temporary keychain; inspect process invocation evidence proving secret bytes are absent from argv/env and clean only exact run-owned artifacts."
+      required: true
+    - id: CHECK-5
+      command_or_check: "Run mandatory full repository verifier plus independent deterministic diff/schema/secret/UI checks through the smallest safe execution bundle; migrations, native Keychain mutation, live network checks and publication remain serial."
+      required: true
+    - id: CHECK-6
+      command_or_check: "Run production loopback smoke on 127.0.0.1 using existing local operator data only for read/display where safe and run-owned data for mutation tests; prove VN/EN navigation and all primary pages load without exposing secrets."
+      required: true
+    - id: CHECK-7
+      command_or_check: "Publish one implementation commit then one report-only child on main; fresh-resolve canonical remote identity after each push, keep zero tags/topology {main}, perform final local hygiene, and stop at NEEDS_REVIEW."
+      required: true
+
+git_authority:
+  create_branch: false
+  commit: true
+  push: true
+  promote_to_main: false
+
+execution_ready: true
