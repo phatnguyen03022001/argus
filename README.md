@@ -1,6 +1,6 @@
 # Argus
 
-Argus is an operator-local control plane and engineering workspace. Phase 2 provides the local workspace foundation: durable Argus-owned workspace metadata, schema migrations, audit evidence, versioned export/restore semantics, and a loopback-only UI for registering existing filesystem roots. Phase 3 adds read-only repository/worktree discovery and Git/GitHub observation.
+Argus is an operator-local control plane and engineering workspace. Phase 2 provides the local workspace foundation: durable Argus-owned workspace metadata, schema migrations, audit evidence, versioned export/restore semantics, and a loopback-only UI for registering existing filesystem roots. Phase 3 adds read-only repository/worktree discovery, Git/GitHub observation, and derived repository health, sync condition, and operator-attention assessment.
 
 ## Local development
 
@@ -25,4 +25,4 @@ pnpm verify
 
 ## Phase boundary
 
-Argus currently includes the Phase 2 workspace foundation and Phase 3 read-only repository/worktree discovery with Git/GitHub observation. Phase 3 does not classify repository health or attention, and it does not perform Git mutation or sync actions. Environment or secret integration, provider integration, task projection, agent execution, business capabilities, and Phase 4+ surfaces remain out of scope. No `.env` file or secret configuration is required.
+Argus currently includes the Phase 2 workspace foundation and Phase 3 read-only repository/worktree discovery with Git/GitHub observation. Phase 3 derives repository health, sync condition, attention, and reason codes from current observations without persisting them as source truth; it does not perform Git mutation or sync actions. Environment or secret integration, provider integration, task projection, agent execution, business capabilities, and Phase 4+ surfaces remain out of scope. No `.env` file or secret configuration is required.

@@ -1,3 +1,4 @@
+import { assessRepository, repositoryReasonText, sortRepositoryAssessments } from "./repository-assessment";
 import type { RepositoryView } from "./repository-observations";
 import type { WorkspaceRecord } from "./workspaces";
 
@@ -25,6 +26,9 @@ export function WorkspaceHome({
   error?: string;
 }) {
   const labels = new Map(workspaces.map((workspace) => [workspace.id, workspace.label]));
+  const assessments = new Map(repositories.map((repository) => [repository.worktreeId, assessRepository(repository)]));
+  const needsAttention = sortRepositoryAssessments([...assessments.values()])
+    .filter((assessment) => assessment.attention !== "HEALTHY");
 
   return (
     <main className="shell">
@@ -64,6 +68,40 @@ export function WorkspaceHome({
         )}
       </section>
 
+      <section className="panel" aria-labelledby="attention-heading">
+        <div className="section-heading">
+          <h2 id="attention-heading">Needs attention</h2>
+          <span>{needsAttention.length}</span>
+        </div>
+        {needsAttention.length === 0 ? (
+          <p className="empty">No repositories currently need attention.</p>
+        ) : (
+          <ul className="repository-list">
+            {needsAttention.map((assessment) => (
+              <li key={`${assessment.identity.canonicalRepositoryIdentity}:${assessment.identity.localPath}`} className="repository-row">
+                <div className="repository-title">
+                  <div>
+                    <strong>{assessment.identity.githubAlias ?? assessment.identity.canonicalRepositoryIdentity}</strong>
+                    <code>{assessment.identity.localPath}</code>
+                  </div>
+                  <span>{assessment.attention}</span>
+                </div>
+                <dl className="repository-facts">
+                  <div><dt>Health</dt><dd>{assessment.health}</dd></div>
+                  <div><dt>Sync</dt><dd>{assessment.syncCondition}</dd></div>
+                  <div><dt>Attention</dt><dd>{assessment.attention}</dd></div>
+                </dl>
+                <ul>
+                  {assessment.reasons.map((reason) => (
+                    <li key={reason}><code>{reason}</code> · {repositoryReasonText(reason)}</li>
+                  ))}
+                </ul>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+
       <section className="panel" aria-labelledby="repositories-heading">
         <div className="section-heading">
           <h2 id="repositories-heading">Repository observations</h2>
@@ -74,6 +112,7 @@ export function WorkspaceHome({
         ) : (
           <ul className="repository-list">
             {repositories.map((repository) => {
+              const assessment = assessments.get(repository.worktreeId) ?? assessRepository(repository);
               const displayIdentity = repository.github.canonicalAlias
                 ?? repository.githubAlias
                 ?? repository.canonicalRepositoryIdentity;
@@ -94,6 +133,10 @@ export function WorkspaceHome({
                   </div>
 
                   <dl className="repository-facts">
+                    <div><dt>Health</dt><dd>{assessment.health}</dd></div>
+                    <div><dt>Sync</dt><dd>{assessment.syncCondition}</dd></div>
+                    <div><dt>Attention</dt><dd>{assessment.attention}</dd></div>
+                    <div><dt>Reasons</dt><dd>{assessment.reasons.length ? assessment.reasons.join(", ") : "none"}</dd></div>
                     <div><dt>Branch</dt><dd>{branch}</dd></div>
                     <div><dt>Local HEAD</dt><dd><code>{repository.local.head ?? "unknown"}</code></dd></div>
                     <div><dt>Dirty</dt><dd>{dirty}</dd></div>
@@ -105,6 +148,14 @@ export function WorkspaceHome({
                     <div><dt>GitHub ref</dt><dd>{repository.github.refName ?? "unknown"}</dd></div>
                     <div><dt>Remote ref SHA</dt><dd><code>{repository.github.refSha ?? "unknown"}</code></dd></div>
                   </dl>
+
+                  {assessment.reasons.length ? (
+                    <ul>
+                      {assessment.reasons.map((reason) => (
+                        <li key={reason}><code>{reason}</code> · {repositoryReasonText(reason)}</li>
+                      ))}
+                    </ul>
+                  ) : null}
 
                   <div className="evidence-grid">
                     <div>

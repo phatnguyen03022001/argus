@@ -96,7 +96,11 @@ test("application add/list flow is durable, clear on rejection, and does not mut
   expect(markup).toContain("CURRENT");
   expect(markup).toContain("AVAILABLE");
   expect(markup).toContain("2026-09-03T10:00:00.000Z");
-  expect(markup).not.toMatch(/HEALTHY|LOCAL_AHEAD|REMOTE_AHEAD|DIVERGED|ATTENTION/i);
+  expect(markup).toContain("Needs attention");
+  expect(markup).toContain("DEGRADED");
+  expect(markup).toContain("ACTION_REQUIRED");
+  expect(markup).toContain("MISMATCH_UNCLASSIFIED");
+  expect(markup).not.toContain("NO_UPSTREAM");
 
   const repository = home.repositories[0];
   if (!repository) throw new Error("Repository fixture was not observed.");
