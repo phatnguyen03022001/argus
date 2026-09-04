@@ -1,5 +1,6 @@
 import { assessRepository, repositoryReasonText, safeFastForwardSyncPreview, sortRepositoryAssessments } from "./repository-assessment";
 import type { RepositoryView } from "./repository-observations";
+import type { CredentialReferenceView } from "./workspace-app";
 import type { WorkspaceRecord } from "./workspaces";
 
 function evidenceStatus(
@@ -19,10 +20,12 @@ function observationTime(observedAt: string | null, checkedAt: string | null): s
 export function WorkspaceHome({
   workspaces,
   repositories = [],
+  credentials = [],
   error,
 }: {
   workspaces: WorkspaceRecord[];
   repositories?: RepositoryView[];
+  credentials?: CredentialReferenceView[];
   error?: string;
 }) {
   const labels = new Map(workspaces.map((workspace) => [workspace.id, workspace.label]));
@@ -39,6 +42,59 @@ export function WorkspaceHome({
       </header>
 
       {error ? <p className="error" role="alert">{error}</p> : null}
+
+      <section className="panel" aria-labelledby="credentials-heading">
+        <div className="section-heading">
+          <h2 id="credentials-heading">Credential references</h2>
+          <span>{credentials.length}</span>
+        </div>
+        <p className="empty">Argus stores locator metadata only. Availability is checked through macOS Keychain.</p>
+        {credentials.length === 0 ? (
+          <p className="empty">No credential references configured.</p>
+        ) : (
+          <ul className="workspace-list">
+            {credentials.map((credential) => (
+              <li key={credential.id} className="workspace-row">
+                <div>
+                  <strong>{credential.label ?? credential.externalSystem}</strong>
+                  <small>{credential.externalSystem}</small>
+                  <code>{credential.keychainService} · {credential.keychainAccount}</code>
+                </div>
+                <div className="workspace-actions">
+                  <strong>{credential.availability}</strong>
+                  <small>v{credential.version}</small>
+                  <form action="/credentials" method="post">
+                    <input type="hidden" name="intent" value="archive" />
+                    <input type="hidden" name="id" value={credential.id} />
+                    <input type="hidden" name="version" value={credential.version} />
+                    <button type="submit">Archive reference</button>
+                  </form>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+        <form action="/credentials" method="post" className="workspace-form">
+          <input type="hidden" name="intent" value="create" />
+          <label>
+            External system
+            <input name="externalSystem" required placeholder="GitHub" autoComplete="off" />
+          </label>
+          <label>
+            Keychain service
+            <input name="keychainService" required placeholder="argus.github" autoComplete="off" />
+          </label>
+          <label>
+            Keychain account
+            <input name="keychainAccount" required placeholder="account" autoComplete="off" />
+          </label>
+          <label>
+            Label (optional)
+            <input name="label" placeholder="Primary GitHub" autoComplete="off" />
+          </label>
+          <button type="submit">Add credential reference</button>
+        </form>
+      </section>
 
       <section className="panel" aria-labelledby="configured-heading">
         <div className="section-heading">

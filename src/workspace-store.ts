@@ -4,3 +4,5 @@ export * from "./recovery";
 export * from "./workspaces";
 export * from "./repositories";
 export * from "./repository-observations";
+export * from "./credentials";
+export * from "./keychain";

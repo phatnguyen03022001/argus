@@ -122,5 +122,5 @@ test("repository UI surfaces canonical relation and safe-sync preview with exact
   expect(markup).toContain(SHA);
   expect(markup).toContain(remoteSha);
   expect(markup).toContain("system-gh:api:compare");
-  expect((markup.match(/<button/g) ?? []).length).toBe(2);
+  expect((markup.match(/<button/g) ?? []).length).toBe(3);
 });

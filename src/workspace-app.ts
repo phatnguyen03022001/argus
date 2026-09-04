@@ -1,4 +1,16 @@
 import {
+  archiveCredentialReference,
+  createCredentialReference,
+  listCredentialReferences,
+  type CredentialReference,
+} from "./credentials";
+import {
+  checkCredentialAvailability,
+  MacOSKeychainAdapter,
+  type CredentialAvailability,
+  type CredentialSecretAdapter,
+} from "./keychain";
+import {
   listRepositoryViews,
   refreshWorkspaceRepositories,
   type RepositoryView,
@@ -9,6 +21,7 @@ import { createWorkspace, listWorkspaces, type WorkspaceRecord } from "./workspa
 
 export interface WorkspaceAppOptions {
   dataRoot?: string;
+  credentialAdapter?: CredentialSecretAdapter;
 }
 
 export interface RepositoryRefreshRequestOptions extends WorkspaceAppOptions {
@@ -16,8 +29,20 @@ export interface RepositoryRefreshRequestOptions extends WorkspaceAppOptions {
   githubRunner?: ProcessRunner;
 }
 
+export interface CredentialReferenceView extends CredentialReference {
+  availability: CredentialAvailability;
+}
+
 export type AddWorkspaceResult =
   | { ok: true; workspace: WorkspaceRecord }
+  | { ok: false; error: string };
+
+export type CreateCredentialReferenceResult =
+  | { ok: true; credential: CredentialReference }
+  | { ok: false; error: string };
+
+export type ArchiveCredentialReferenceResult =
+  | { ok: true; credential: CredentialReference }
   | { ok: false; error: string };
 
 export type RefreshWorkspaceRepositoriesResult =
@@ -27,13 +52,24 @@ export type RefreshWorkspaceRepositoriesResult =
 export function loadWorkspaceHome(options: WorkspaceAppOptions = {}): {
   workspaces: WorkspaceRecord[];
   repositories: RepositoryView[];
+  credentials: CredentialReferenceView[];
 } {
   const store = openStore(options);
   try {
     const workspaces = listWorkspaces(store);
+    const adapter = options.credentialAdapter ?? new MacOSKeychainAdapter();
+    const credentials = listCredentialReferences(store).map((credential) => ({
+      ...credential,
+      availability: checkCredentialAvailability(
+        credential,
+        { operation: "credential.availability" },
+        adapter,
+      ).availability,
+    }));
     return {
       workspaces,
       repositories: workspaces.flatMap((workspace) => listRepositoryViews(store, workspace.id)),
+      credentials,
     };
   } finally {
     store.close();
@@ -49,6 +85,35 @@ export function addWorkspaceRequest(
     return { ok: true, workspace: createWorkspace(store, input) };
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message : "Workspace could not be added." };
+  } finally {
+    store.close();
+  }
+}
+
+export function createCredentialReferenceRequest(
+  input: { externalSystem: string; keychainService: string; keychainAccount: string; label?: string },
+  options: WorkspaceAppOptions = {},
+): CreateCredentialReferenceResult {
+  const store = openStore(options);
+  try {
+    return { ok: true, credential: createCredentialReference(store, input) };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Credential reference could not be added." };
+  } finally {
+    store.close();
+  }
+}
+
+export function archiveCredentialReferenceRequest(
+  id: string,
+  expectedVersion: number,
+  options: WorkspaceAppOptions = {},
+): ArchiveCredentialReferenceResult {
+  const store = openStore(options);
+  try {
+    return { ok: true, credential: archiveCredentialReference(store, id, expectedVersion) };
+  } catch (error) {
+    return { ok: false, error: error instanceof Error ? error.message : "Credential reference could not be archived." };
   } finally {
     store.close();
   }

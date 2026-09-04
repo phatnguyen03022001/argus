@@ -1,16 +1,62 @@
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { insertAudit, listAuditEntries, recordAudit, type AuditEntry } from "./audit";
+import { listCredentialReferences, type CredentialReference } from "./credentials";
 import { CURRENT_SCHEMA_VERSION, readSchemaVersion, type Store } from "./persistence";
 import { listWorkspaces, type WorkspaceRecord } from "./workspaces";
 
 export const EXPORT_FORMAT_VERSION = 1;
+
+type RepositoryKind = "working-tree" | "linked-worktree";
+type Availability = "AVAILABLE" | "UNAVAILABLE" | "UNKNOWN";
+type Freshness = "CURRENT" | "STALE" | "UNKNOWN";
+type ConflictState = "NONE" | "CONFLICTED";
+
+interface RepositoryWorktreeBackup {
+  id: string;
+  workspaceId: string;
+  localPath: string;
+  repositoryKind: RepositoryKind;
+  gitDir: string;
+  commonDir: string;
+  canonicalRepositoryIdentity: string;
+  githubRepositoryId: string | null;
+  githubAlias: string | null;
+  githubRefName: string | null;
+  remoteName: string | null;
+  remoteUrl: string | null;
+  firstSeenAt: string;
+  lastSeenAt: string;
+}
+
+interface RepositoryObservationBackup {
+  eventId: number;
+  observationId: string;
+  workspaceId: string;
+  worktreeId: string;
+  sourceIdentity: string;
+  subjectIdentity: string;
+  kind: string;
+  valueJson: string | null;
+  absenceReason: string | null;
+  observedAt: string;
+  checkedAt: string;
+  availability: Availability;
+  freshness: Freshness;
+  sourceVersion: string | null;
+  provenance: string;
+  conflictState: ConflictState;
+  conflictValueJson: string | null;
+}
 
 interface ExportBody {
   formatVersion: number;
   schemaVersion: number;
   exportedAt: string;
   workspaces: WorkspaceRecord[];
+  credentialReferences: CredentialReference[];
+  repositoryWorktrees: RepositoryWorktreeBackup[];
+  repositoryObservations: RepositoryObservationBackup[];
   auditEntries: AuditEntry[];
 }
 
@@ -22,12 +68,58 @@ function digestBody(body: ExportBody): string {
   return createHash("sha256").update(JSON.stringify(body)).digest("hex");
 }
 
+function listRepositoryWorktrees(store: Store): RepositoryWorktreeBackup[] {
+  const rows = store.db.prepare("SELECT * FROM repository_worktrees ORDER BY id").all() as Record<string, unknown>[];
+  return rows.map((row) => ({
+    id: String(row.id),
+    workspaceId: String(row.workspace_id),
+    localPath: String(row.local_path),
+    repositoryKind: String(row.repository_kind) as RepositoryKind,
+    gitDir: String(row.git_dir),
+    commonDir: String(row.common_dir),
+    canonicalRepositoryIdentity: String(row.canonical_repository_identity),
+    githubRepositoryId: row.github_repository_id == null ? null : String(row.github_repository_id),
+    githubAlias: row.github_alias == null ? null : String(row.github_alias),
+    githubRefName: row.github_ref_name == null ? null : String(row.github_ref_name),
+    remoteName: row.remote_name == null ? null : String(row.remote_name),
+    remoteUrl: row.remote_url == null ? null : String(row.remote_url),
+    firstSeenAt: String(row.first_seen_at),
+    lastSeenAt: String(row.last_seen_at),
+  }));
+}
+
+function listRepositoryObservations(store: Store): RepositoryObservationBackup[] {
+  const rows = store.db.prepare("SELECT * FROM repository_observations ORDER BY event_id").all() as Record<string, unknown>[];
+  return rows.map((row) => ({
+    eventId: Number(row.event_id),
+    observationId: String(row.observation_id),
+    workspaceId: String(row.workspace_id),
+    worktreeId: String(row.worktree_id),
+    sourceIdentity: String(row.source_identity),
+    subjectIdentity: String(row.subject_identity),
+    kind: String(row.observation_kind),
+    valueJson: row.value_json == null ? null : String(row.value_json),
+    absenceReason: row.absence_reason == null ? null : String(row.absence_reason),
+    observedAt: String(row.observed_at),
+    checkedAt: String(row.checked_at),
+    availability: String(row.availability) as Availability,
+    freshness: String(row.freshness) as Freshness,
+    sourceVersion: row.source_version == null ? null : String(row.source_version),
+    provenance: String(row.provenance),
+    conflictState: String(row.conflict_state) as ConflictState,
+    conflictValueJson: row.conflict_value_json == null ? null : String(row.conflict_value_json),
+  }));
+}
+
 export function exportState(store: Store): string {
   const body: ExportBody = {
     formatVersion: EXPORT_FORMAT_VERSION,
     schemaVersion: readSchemaVersion(store.db),
     exportedAt: new Date().toISOString(),
     workspaces: listWorkspaces(store, { includeArchived: true }).sort((a, b) => a.id.localeCompare(b.id)),
+    credentialReferences: listCredentialReferences(store, { includeArchived: true }).sort((a, b) => a.id.localeCompare(b.id)),
+    repositoryWorktrees: listRepositoryWorktrees(store),
+    repositoryObservations: listRepositoryObservations(store),
     auditEntries: listAuditEntries(store).sort((a, b) => a.id.localeCompare(b.id)),
   };
   const document: ExportDocument = {
@@ -46,9 +138,22 @@ function requireString(value: unknown, field: string): string {
   return value;
 }
 
+function requireMetadata(value: unknown, field: string): string {
+  const normalized = requireString(value, field).trim();
+  if (!normalized || normalized.length > 255 || /[\u0000-\u001f\u007f]/u.test(normalized)) {
+    throw new Error(`Invalid restore field: ${field}.`);
+  }
+  return normalized;
+}
+
 function requireNullableString(value: unknown, field: string): string | null {
   if (value === null) return null;
   return requireString(value, field);
+}
+
+function requireNullableMetadata(value: unknown, field: string): string | null {
+  if (value === null) return null;
+  return requireMetadata(value, field);
 }
 
 function requireNullableInteger(value: unknown, field: string): number | null {
@@ -57,8 +162,45 @@ function requireNullableInteger(value: unknown, field: string): number | null {
   return Number(value);
 }
 
+function requirePositiveInteger(value: unknown, field: string): number {
+  if (!Number.isInteger(value) || Number(value) < 1) throw new Error(`Invalid restore field: ${field}.`);
+  return Number(value);
+}
+
+function requireAbsolutePath(value: unknown, field: string): string {
+  const result = requireString(value, field);
+  if (!path.isAbsolute(result)) throw new Error(`Restore path must be absolute: ${field}.`);
+  return result;
+}
+
+function requireJsonString(value: unknown, field: string): string | null {
+  if (value === null) return null;
+  const result = requireString(value, field);
+  try {
+    JSON.parse(result);
+  } catch {
+    throw new Error(`Invalid restore JSON field: ${field}.`);
+  }
+  return result;
+}
+
+function assertNoSecretShapedKeys(value: unknown): void {
+  if (Array.isArray(value)) {
+    for (const item of value) assertNoSecretShapedKeys(item);
+    return;
+  }
+  if (!value || typeof value !== "object") return;
+  for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    if (/(secret|token|password|private[_-]?key)/i.test(key)) {
+      throw new Error("Restore document contains a forbidden secret-shaped field.");
+    }
+    assertNoSecretShapedKeys(child);
+  }
+}
+
 function validateRestoreDocument(value: unknown): ExportDocument {
   if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error("Invalid restore document.");
+  assertNoSecretShapedKeys(value);
   const raw = value as Record<string, unknown>;
   if (raw.formatVersion !== EXPORT_FORMAT_VERSION) {
     throw new Error(`Unsupported export format version: ${String(raw.formatVersion)}.`);
@@ -66,16 +208,20 @@ function validateRestoreDocument(value: unknown): ExportDocument {
   if (raw.schemaVersion !== CURRENT_SCHEMA_VERSION) {
     throw new Error(`Unsupported restore schema version: ${String(raw.schemaVersion)}.`);
   }
-  if (!Array.isArray(raw.workspaces) || !Array.isArray(raw.auditEntries)) throw new Error("Invalid restore collections.");
+  if (
+    !Array.isArray(raw.workspaces)
+    || !Array.isArray(raw.credentialReferences)
+    || !Array.isArray(raw.repositoryWorktrees)
+    || !Array.isArray(raw.repositoryObservations)
+    || !Array.isArray(raw.auditEntries)
+  ) throw new Error("Invalid restore collections.");
   const exportedAt = requireString(raw.exportedAt, "exportedAt");
 
   const workspaces: WorkspaceRecord[] = raw.workspaces.map((item, index) => {
     if (!item || typeof item !== "object" || Array.isArray(item)) throw new Error(`Invalid workspace at index ${index}.`);
     const row = item as Record<string, unknown>;
     if (!isUuid(row.id)) throw new Error(`Invalid workspace identity at index ${index}.`);
-    const rootPath = requireString(row.rootPath, `workspaces[${index}].rootPath`);
-    if (!path.isAbsolute(rootPath)) throw new Error(`Workspace root must be absolute in restore at index ${index}.`);
-    if (!Number.isInteger(row.version) || Number(row.version) < 1) throw new Error(`Invalid workspace version at index ${index}.`);
+    const rootPath = requireAbsolutePath(row.rootPath, `workspaces[${index}].rootPath`);
     return {
       id: row.id,
       label: requireString(row.label, `workspaces[${index}].label`),
@@ -83,7 +229,7 @@ function validateRestoreDocument(value: unknown): ExportDocument {
       createdAt: requireString(row.createdAt, `workspaces[${index}].createdAt`),
       updatedAt: requireString(row.updatedAt, `workspaces[${index}].updatedAt`),
       archivedAt: requireNullableString(row.archivedAt, `workspaces[${index}].archivedAt`),
-      version: Number(row.version),
+      version: requirePositiveInteger(row.version, `workspaces[${index}].version`),
     };
   });
 
@@ -98,6 +244,121 @@ function validateRestoreDocument(value: unknown): ExportDocument {
     }
   }
 
+  const appNativeIds = new Set(workspaceIds);
+  const credentialReferences: CredentialReference[] = raw.credentialReferences.map((item, index) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) throw new Error(`Invalid credential reference at index ${index}.`);
+    const row = item as Record<string, unknown>;
+    if (!isUuid(row.id)) throw new Error(`Invalid credential reference identity at index ${index}.`);
+    if (appNativeIds.has(row.id)) throw new Error(`Duplicate app-native identity in restore: ${row.id}.`);
+    const credential: CredentialReference = {
+      id: row.id,
+      externalSystem: requireMetadata(row.externalSystem, `credentialReferences[${index}].externalSystem`),
+      keychainService: requireMetadata(row.keychainService, `credentialReferences[${index}].keychainService`),
+      keychainAccount: requireMetadata(row.keychainAccount, `credentialReferences[${index}].keychainAccount`),
+      label: requireNullableMetadata(row.label, `credentialReferences[${index}].label`),
+      createdAt: requireString(row.createdAt, `credentialReferences[${index}].createdAt`),
+      updatedAt: requireString(row.updatedAt, `credentialReferences[${index}].updatedAt`),
+      archivedAt: requireNullableString(row.archivedAt, `credentialReferences[${index}].archivedAt`),
+      version: requirePositiveInteger(row.version, `credentialReferences[${index}].version`),
+    };
+    appNativeIds.add(credential.id);
+    return credential;
+  });
+
+  const activeLocators = new Set<string>();
+  for (const credential of credentialReferences) {
+    if (credential.archivedAt !== null) continue;
+    const locator = `${credential.keychainService}\u0000${credential.keychainAccount}`;
+    if (activeLocators.has(locator)) throw new Error("Duplicate active credential locator in restore.");
+    activeLocators.add(locator);
+  }
+
+  const repositoryWorktrees: RepositoryWorktreeBackup[] = raw.repositoryWorktrees.map((item, index) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) throw new Error(`Invalid repository worktree at index ${index}.`);
+    const row = item as Record<string, unknown>;
+    const workspaceId = requireString(row.workspaceId, `repositoryWorktrees[${index}].workspaceId`);
+    if (!workspaceIds.has(workspaceId)) throw new Error(`Invalid repository workspace relationship at index ${index}.`);
+    const repositoryKind = row.repositoryKind;
+    if (repositoryKind !== "working-tree" && repositoryKind !== "linked-worktree") {
+      throw new Error(`Invalid repository kind at index ${index}.`);
+    }
+    return {
+      id: requireString(row.id, `repositoryWorktrees[${index}].id`),
+      workspaceId,
+      localPath: requireAbsolutePath(row.localPath, `repositoryWorktrees[${index}].localPath`),
+      repositoryKind,
+      gitDir: requireAbsolutePath(row.gitDir, `repositoryWorktrees[${index}].gitDir`),
+      commonDir: requireAbsolutePath(row.commonDir, `repositoryWorktrees[${index}].commonDir`),
+      canonicalRepositoryIdentity: requireString(row.canonicalRepositoryIdentity, `repositoryWorktrees[${index}].canonicalRepositoryIdentity`),
+      githubRepositoryId: requireNullableString(row.githubRepositoryId, `repositoryWorktrees[${index}].githubRepositoryId`),
+      githubAlias: requireNullableString(row.githubAlias, `repositoryWorktrees[${index}].githubAlias`),
+      githubRefName: requireNullableString(row.githubRefName, `repositoryWorktrees[${index}].githubRefName`),
+      remoteName: requireNullableString(row.remoteName, `repositoryWorktrees[${index}].remoteName`),
+      remoteUrl: requireNullableString(row.remoteUrl, `repositoryWorktrees[${index}].remoteUrl`),
+      firstSeenAt: requireString(row.firstSeenAt, `repositoryWorktrees[${index}].firstSeenAt`),
+      lastSeenAt: requireString(row.lastSeenAt, `repositoryWorktrees[${index}].lastSeenAt`),
+    };
+  });
+
+  const worktreeIds = new Set<string>();
+  const workspacePaths = new Set<string>();
+  const worktreeWorkspace = new Map<string, string>();
+  for (const worktree of repositoryWorktrees) {
+    if (worktreeIds.has(worktree.id)) throw new Error(`Duplicate repository worktree identity in restore: ${worktree.id}.`);
+    worktreeIds.add(worktree.id);
+    worktreeWorkspace.set(worktree.id, worktree.workspaceId);
+    const key = `${worktree.workspaceId}\u0000${worktree.localPath}`;
+    if (workspacePaths.has(key)) throw new Error("Duplicate repository worktree path in restore.");
+    workspacePaths.add(key);
+  }
+
+  const repositoryObservations: RepositoryObservationBackup[] = raw.repositoryObservations.map((item, index) => {
+    if (!item || typeof item !== "object" || Array.isArray(item)) throw new Error(`Invalid repository observation at index ${index}.`);
+    const row = item as Record<string, unknown>;
+    const workspaceId = requireString(row.workspaceId, `repositoryObservations[${index}].workspaceId`);
+    const worktreeId = requireString(row.worktreeId, `repositoryObservations[${index}].worktreeId`);
+    if (!workspaceIds.has(workspaceId) || !worktreeIds.has(worktreeId) || worktreeWorkspace.get(worktreeId) !== workspaceId) {
+      throw new Error(`Invalid repository observation relationship at index ${index}.`);
+    }
+    const availability = row.availability;
+    if (availability !== "AVAILABLE" && availability !== "UNAVAILABLE" && availability !== "UNKNOWN") {
+      throw new Error(`Invalid repository observation availability at index ${index}.`);
+    }
+    const freshness = row.freshness;
+    if (freshness !== "CURRENT" && freshness !== "STALE" && freshness !== "UNKNOWN") {
+      throw new Error(`Invalid repository observation freshness at index ${index}.`);
+    }
+    const conflictState = row.conflictState;
+    if (conflictState !== "NONE" && conflictState !== "CONFLICTED") {
+      throw new Error(`Invalid repository observation conflict state at index ${index}.`);
+    }
+    return {
+      eventId: requirePositiveInteger(row.eventId, `repositoryObservations[${index}].eventId`),
+      observationId: requireString(row.observationId, `repositoryObservations[${index}].observationId`),
+      workspaceId,
+      worktreeId,
+      sourceIdentity: requireString(row.sourceIdentity, `repositoryObservations[${index}].sourceIdentity`),
+      subjectIdentity: requireString(row.subjectIdentity, `repositoryObservations[${index}].subjectIdentity`),
+      kind: requireString(row.kind, `repositoryObservations[${index}].kind`),
+      valueJson: requireJsonString(row.valueJson, `repositoryObservations[${index}].valueJson`),
+      absenceReason: requireNullableString(row.absenceReason, `repositoryObservations[${index}].absenceReason`),
+      observedAt: requireString(row.observedAt, `repositoryObservations[${index}].observedAt`),
+      checkedAt: requireString(row.checkedAt, `repositoryObservations[${index}].checkedAt`),
+      availability,
+      freshness,
+      sourceVersion: requireNullableString(row.sourceVersion, `repositoryObservations[${index}].sourceVersion`),
+      provenance: requireString(row.provenance, `repositoryObservations[${index}].provenance`),
+      conflictState,
+      conflictValueJson: requireJsonString(row.conflictValueJson, `repositoryObservations[${index}].conflictValueJson`),
+    };
+  });
+
+  const eventIds = new Set<number>();
+  for (const observation of repositoryObservations) {
+    if (eventIds.has(observation.eventId)) throw new Error(`Duplicate repository observation event in restore: ${observation.eventId}.`);
+    eventIds.add(observation.eventId);
+  }
+
   const auditEntries: AuditEntry[] = raw.auditEntries.map((item, index) => {
     if (!item || typeof item !== "object" || Array.isArray(item)) throw new Error(`Invalid audit entry at index ${index}.`);
     const row = item as Record<string, unknown>;
@@ -106,8 +367,8 @@ function validateRestoreDocument(value: unknown): ExportDocument {
     if (row.outcome !== "success" && row.outcome !== "rejected") throw new Error(`Invalid audit outcome at index ${index}.`);
     const preRecordId = requireNullableString(row.preRecordId, `auditEntries[${index}].preRecordId`);
     const postRecordId = requireNullableString(row.postRecordId, `auditEntries[${index}].postRecordId`);
-    if (preRecordId !== null && !workspaceIds.has(preRecordId)) throw new Error(`Invalid audit pre-record relationship at index ${index}.`);
-    if (postRecordId !== null && !workspaceIds.has(postRecordId)) throw new Error(`Invalid audit post-record relationship at index ${index}.`);
+    if (preRecordId !== null && !appNativeIds.has(preRecordId)) throw new Error(`Invalid audit pre-record relationship at index ${index}.`);
+    if (postRecordId !== null && !appNativeIds.has(postRecordId)) throw new Error(`Invalid audit post-record relationship at index ${index}.`);
     return {
       id: row.id,
       occurredAt: requireString(row.occurredAt, `auditEntries[${index}].occurredAt`),
@@ -139,6 +400,9 @@ function validateRestoreDocument(value: unknown): ExportDocument {
     schemaVersion: CURRENT_SCHEMA_VERSION,
     exportedAt,
     workspaces,
+    credentialReferences,
+    repositoryWorktrees,
+    repositoryObservations,
     auditEntries,
   };
   if (digestBody(body) !== digest) throw new Error("Restore integrity validation failed.");
@@ -173,7 +437,10 @@ export function restoreState(store: Store, serialized: string): void {
   const retainedRecoveryAudit = listAuditEntries(store).filter((entry) => entry.operation === "state.restore");
 
   const replace = store.db.transaction(() => {
+    store.db.prepare("DELETE FROM repository_observations").run();
+    store.db.prepare("DELETE FROM repository_worktrees").run();
     store.db.prepare("DELETE FROM audit_entries").run();
+    store.db.prepare("DELETE FROM credential_references").run();
     store.db.prepare("DELETE FROM workspaces").run();
 
     const insertWorkspace = store.db.prepare(`
@@ -189,6 +456,81 @@ export function restoreState(store: Store, serialized: string): void {
         workspace.updatedAt,
         workspace.archivedAt,
         workspace.version,
+      );
+    }
+
+    const insertCredential = store.db.prepare(`
+      INSERT INTO credential_references (
+        id, external_system, keychain_service, keychain_account, label,
+        created_at, updated_at, archived_at, version
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    for (const credential of document.credentialReferences) {
+      insertCredential.run(
+        credential.id,
+        credential.externalSystem,
+        credential.keychainService,
+        credential.keychainAccount,
+        credential.label,
+        credential.createdAt,
+        credential.updatedAt,
+        credential.archivedAt,
+        credential.version,
+      );
+    }
+
+    const insertWorktree = store.db.prepare(`
+      INSERT INTO repository_worktrees (
+        id, workspace_id, local_path, repository_kind, git_dir, common_dir,
+        canonical_repository_identity, github_repository_id, github_alias, github_ref_name,
+        remote_name, remote_url, first_seen_at, last_seen_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    for (const worktree of document.repositoryWorktrees) {
+      insertWorktree.run(
+        worktree.id,
+        worktree.workspaceId,
+        worktree.localPath,
+        worktree.repositoryKind,
+        worktree.gitDir,
+        worktree.commonDir,
+        worktree.canonicalRepositoryIdentity,
+        worktree.githubRepositoryId,
+        worktree.githubAlias,
+        worktree.githubRefName,
+        worktree.remoteName,
+        worktree.remoteUrl,
+        worktree.firstSeenAt,
+        worktree.lastSeenAt,
+      );
+    }
+
+    const insertObservation = store.db.prepare(`
+      INSERT INTO repository_observations (
+        event_id, observation_id, workspace_id, worktree_id, source_identity, subject_identity,
+        observation_kind, value_json, absence_reason, observed_at, checked_at,
+        availability, freshness, source_version, provenance, conflict_state, conflict_value_json
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    for (const observation of document.repositoryObservations) {
+      insertObservation.run(
+        observation.eventId,
+        observation.observationId,
+        observation.workspaceId,
+        observation.worktreeId,
+        observation.sourceIdentity,
+        observation.subjectIdentity,
+        observation.kind,
+        observation.valueJson,
+        observation.absenceReason,
+        observation.observedAt,
+        observation.checkedAt,
+        observation.availability,
+        observation.freshness,
+        observation.sourceVersion,
+        observation.provenance,
+        observation.conflictState,
+        observation.conflictValueJson,
       );
     }
 

@@ -265,7 +265,7 @@ test("repository refresh adopts immutable GitHub identity, persists current evid
   };
 
   const store = api.openStore({ dataRoot });
-  expect(api.readSchemaVersion(store.db)).toBe(2);
+  expect(api.readSchemaVersion(store.db)).toBe(api.CURRENT_SCHEMA_VERSION);
   const workspace = api.createWorkspace(store, { label: "Repositories", root: workspaceRoot });
 
   await api.refreshWorkspaceRepositories(store, workspace.id, {

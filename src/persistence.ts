@@ -3,7 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import Database from "better-sqlite3";
 
-export const CURRENT_SCHEMA_VERSION = 2;
+export const CURRENT_SCHEMA_VERSION = 3;
 export type SqliteDatabase = InstanceType<typeof Database>;
 
 export interface Migration {
@@ -111,6 +111,28 @@ export const MIGRATIONS: Migration[] = [
 
         CREATE INDEX repository_observations_worktree_kind_idx
           ON repository_observations(worktree_id, observation_kind, event_id);
+      `);
+    },
+  },
+  {
+    version: 3,
+    up(db) {
+      db.exec(`
+        CREATE TABLE credential_references (
+          id TEXT PRIMARY KEY,
+          external_system TEXT NOT NULL,
+          keychain_service TEXT NOT NULL,
+          keychain_account TEXT NOT NULL,
+          label TEXT,
+          created_at TEXT NOT NULL,
+          updated_at TEXT NOT NULL,
+          archived_at TEXT,
+          version INTEGER NOT NULL CHECK (version >= 1)
+        );
+
+        CREATE UNIQUE INDEX credential_references_active_locator_unique
+          ON credential_references(keychain_service, keychain_account)
+          WHERE archived_at IS NULL;
       `);
     },
   },
