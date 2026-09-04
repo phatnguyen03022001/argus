@@ -1,0 +1,180 @@
+protocol_version: 3
+
+task_id: TASK-0004
+task_revision: 1
+report_revision: 1
+state: REPORTED
+
+task_source:
+  path: .agent/tasks/TASK-0004/task.yaml
+  blob: "dab502283a420b1edafb613cf027bd488450089f"
+
+execution:
+  repository: phatnguyen03022001/argus
+  branch:
+    name: main
+    role: canonical
+  authorized_base_head: 47f20d921152b2193d0b67f1a686406e6f6ea63f
+  pre_execution_head: 47f20d921152b2193d0b67f1a686406e6f6ea63f
+  final_execution_head: 12826fc1b21ca19d6e4779ec0237c82944f1d253
+
+skill_library:
+  repository: phatnguyen03022001/agent-skills
+  authorized_revision: "4a063c41f429207577434600a3571dc17822cd78"
+  observed_revision: "4a063c41f429207577434600a3571dc17822cd78"
+
+execution_skills_used:
+  required:
+    - executor
+    - simplicity
+    - verification
+  recommended: []
+  external: []
+
+pre_execution_checks:
+  protocol_version_supported: true
+  task_revision_confirmed: true
+  task_identity_confirmed: true
+  accepted_task_0003_review_confirmed: true
+  repository_confirmed: true
+  branch_confirmed: true
+  base_head_confirmed: true
+  remote_main_confirmed: true
+  main_only_topology_confirmed: true
+  zero_tags_confirmed: true
+  skill_revision_confirmed: true
+  required_execution_skills_available: true
+  structure_authority_confirmed: true
+  working_tree_clean: true
+
+capability_preflight:
+  phase: EXECUTION
+  required:
+    - exact_remote_ref_read
+    - repository_content_read
+    - repository_content_write
+    - native_local_execution
+    - filesystem_test_fixture_execution
+    - git_read_observation
+    - github_cli_read_observation
+    - package_install
+    - test_execution
+    - production_build_execution
+    - loopback_runtime_smoke
+    - exact_diff_inspection
+  missing: []
+  passed: true
+
+local_hygiene:
+  result: PASS
+  run_root: /private/tmp/argus-task0004-final-smoke.wW6geJ
+  cleanup_performed: true
+  retained: []
+  evidence: >-
+    The final production smoke used a realpath-checked, non-symlink, run-owned temporary HOME under /private/tmp and
+    was removed after server termination. The earlier bounded smoke root /private/tmp/argus-task0004-smoke.GMj81e
+    was independently proven run-owned and removed before final verification; no temporary execution artifact remains.
+
+commits_created:
+  - sha: 12826fc1b21ca19d6e4779ec0237c82944f1d253
+    parent: 47f20d921152b2193d0b67f1a686406e6f6ea63f
+    message: "feat: derive repository health and attention"
+
+pushed: false
+promoted_to_main: false
+
+authoritative_verification:
+  required: false
+  performed: false
+  result: NOT_REQUIRED
+  evidence: "Task authority does not designate an authoritative verifier for this execution phase."
+
+acceptance_evidence:
+  - criterion_id: AC-1
+    status: PASS
+    evidence: >-
+      src/repository-assessment.ts is a pure deterministic projection over RepositoryView. Focused tests assert exact
+      health, attention, sync-condition, ordered reason, identity, and evidence-summary outputs. No persistence,
+      subprocess, network, cache, or external API boundary is imported by the projection.
+  - criterion_id: AC-2
+    status: PASS
+    evidence: >-
+      Focused matrix coverage proves conflict yields BLOCKING/non-healthy, unavailable or unknown required evidence
+      yields UNKNOWN/non-healthy, stale required evidence yields DEGRADED, and degraded required inputs cannot produce HEALTHY.
+  - criterion_id: AC-3
+    status: PASS
+    evidence: >-
+      Repository assessment tests cover IN_SYNC, LOCAL_AHEAD, LOCAL_BEHIND, DIVERGED, MISMATCH_UNCLASSIFIED, and UNKNOWN.
+      Ahead/behind counts are used only when the observed upstream matches the current remote/ref identity; no desired
+      branch or policy is inferred.
+  - criterion_id: AC-4
+    status: PASS
+    evidence: >-
+      Tests cover dirty, detached, ahead, behind, diverged, conflict, stale, unavailable, unknown, multi-reason
+      precedence/order, and HEALTHY+INFO NO_UPSTREAM only when exact current local/GitHub SHA equality proves IN_SYNC.
+  - criterion_id: AC-5
+    status: PASS
+    evidence: >-
+      UI render coverage proves Needs attention severity ordering and per-repository health, sync, attention, and reason
+      explanations. Existing local HEAD, GitHub ref/repository facts, availability/freshness/conflict state, and observation
+      timestamps remain rendered in the raw Repository observations section.
+  - criterion_id: AC-6
+    status: PASS
+    evidence: >-
+      Existing TASK-0003 repository-observation coverage remains green at 10/10 tests. Exact base-to-implementation
+      inspection shows no changes to src/repositories.ts, src/repository-observations.ts, src/persistence.ts, package.json,
+      or pnpm-lock.yaml; production projection/UI source contains no Git/GitHub mutation subprocess or API boundary.
+  - criterion_id: AC-7
+    status: PENDING_POST_PUBLICATION
+    evidence: >-
+      Fresh pnpm install --frozen-lockfile, repository-owned pnpm verify, production loopback smoke, diff/dependency/schema/
+      secret/forward-scope inspection, and the sole direct-child implementation commit are complete. This report-only child
+      must be committed and pushed, then final remote/local main, parents/diffs, task/report blobs, zero tags, and {main}
+      topology must be re-resolved.
+
+executor_checks:
+  - check_id: CHECK-1
+    result: PASS
+    evidence: >-
+      Before mutation local HEAD, origin main, and GitHub API main resolved to 47f20d921152b2193d0b67f1a686406e6f6ea63f;
+      task blob was dab502283a420b1edafb613cf027bd488450089f; TASK-0003 revision-4 review was ACCEPTED; topology was
+      exactly {main}; tags were empty; Node 24.19.0 and pnpm 11.24.0 matched repository requirements.
+  - check_id: CHECK-2
+    result: PASS
+    evidence: "tests/repository-assessment.test.ts passed deterministic health/attention/sync/reason matrix coverage."
+  - check_id: CHECK-3
+    result: PASS
+    evidence: "tests/repository-assessment-ui.test.tsx passed Needs attention ordering and explainable raw-evidence-preservation coverage."
+  - check_id: CHECK-4
+    result: PASS
+    evidence: "tests/repository-observation.test.ts passed 10/10 unchanged TASK-0003 read-only/provenance/reconciliation regressions."
+  - check_id: CHECK-5
+    result: PASS
+    evidence: >-
+      Final pnpm install --frozen-lockfile completed without lockfile changes. pnpm verify passed typecheck, 6 Vitest files/
+      20 tests, and the Next.js 16.3.3 optimized production build. Direct built Next startup on 127.0.0.1:33428 with a
+      run-owned temporary HOME returned HTTP success and rendered Needs attention; the temporary root was removed.
+  - check_id: CHECK-6
+    result: PASS
+    evidence: >-
+      Exact staged/base inspection was whitespace-clean and limited to README.md, src/repository-assessment.ts,
+      src/workspace-home.tsx, tests/application.test.tsx, tests/repository-assessment.test.ts, and
+      tests/repository-assessment-ui.test.tsx. No dependency/lockfile, schema/migration, production observation boundary,
+      secret, environment/Keychain, Git synchronization action, Phase 4+, workflow, release, tag, or deployment surface changed.
+  - check_id: CHECK-7
+    result: PENDING_POST_PUBLICATION
+    evidence: >-
+      Implementation 12826fc1b21ca19d6e4779ec0237c82944f1d253 is the sole direct child of the exact base. This report must
+      become its sole report-only child and be published before final remote/local lineage and topology re-resolution.
+
+discovered_gaps: []
+structural_observations: []
+deviations_from_task: []
+blockers: []
+
+working_tree_after:
+  clean: false
+  summary: "Only .agent/tasks/TASK-0004/report.yaml remains to be committed as the required report-only child."
+
+result: NEEDS_REVIEW
+review_write: false
