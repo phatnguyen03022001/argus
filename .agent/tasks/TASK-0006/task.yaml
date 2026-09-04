@@ -1,0 +1,251 @@
+protocol_version: 3
+
+task_id: TASK-0006
+task_revision: 1
+state: APPROVED
+
+origin:
+  type: architect_planning
+  milestone: PHASE_4_ENVIRONMENT_AND_SECRETS
+  slice: CREDENTIAL_REFERENCES_AND_KEYCHAIN_BOUNDARY
+
+architect_binding:
+  target_repository: phatnguyen03022001/argus
+
+target:
+  repository: phatnguyen03022001/argus
+  branch:
+    name: main
+    role: canonical
+
+execution_base:
+  mode: handoff_snapshot
+  capture: after_final_planning_commit
+  require_exact_match: true
+
+skill_library:
+  repository: phatnguyen03022001/agent-skills
+  revision: "4a063c41f429207577434600a3571dc17822cd78"
+
+execution_skills:
+  required:
+    - executor
+    - simplicity
+    - verification
+
+external_skills:
+  execution_required: []
+  execution_recommended: []
+
+authority_sources:
+  - source: "phatnguyen03022001/argus@4388bd7dec5b6dc0efdb87d08821ee9c2e4a15b6"
+    role: >-
+      Accepted Phase 0-3 target truth and Phase 4 foundation authority: credential-reference ownership, macOS Keychain
+      secret ownership, durability/export/restore obligations, transport-independent secret-resolution contract, and
+      security-negative requirements.
+    precedence: 1
+  - source: "phatnguyen03022001/agent-skills@4a063c41f429207577434600a3571dc17822cd78"
+    role: "Pinned protocol-v3 Executor, simplicity, and verification authority."
+    precedence: 2
+
+structure_authority:
+  status: RESOLVED
+  source: >-
+    Preserve the existing single-package Next.js/TypeScript + SQLite application. Add the smallest local persistence,
+    domain/application, native-macOS Keychain adapter, UI, and test surfaces required for this Phase 4 slice. No new
+    package/service/top-level ownership boundary, ORM, generic credential framework, provider adapter framework, daemon,
+    queue, worker, plugin system, or cloud secret store is authorized.
+
+objective: >-
+  Begin Phase 4 by making non-secret credential references durable Argus-owned records while keeping every secret value
+  exclusively owned by macOS Keychain. Add a narrow secret-resolution boundary that can prove credential availability
+  and transiently supply the minimum secret value only to an explicitly scoped in-process consumer, without returning,
+  persisting, logging, exporting, rendering, auditing, or otherwise widening the secret value. This slice does not create
+  or rotate real credentials, does not implement providers, and does not materialize .env files.
+
+scope:
+  required_changes:
+    - >-
+      Add durable credential-reference records as APP_NATIVE_TRUTH with stable Argus identity, intended external system,
+      safe Keychain service/account locator metadata, optional label, created/updated timestamps, archived state, and
+      optimistic versioning consistent with existing app-native records. Secret bytes/tokens/passwords/private keys are
+      structurally absent from the record type and database schema.
+    - >-
+      Add the required forward SQLite migration and migration/reopen tests. Existing valid older stores must migrate
+      forward safely; unsupported/newer schema behavior and rollback-on-migration-failure guarantees remain intact.
+    - >-
+      Extend export/restore so non-secret credential references are included as required APP_NATIVE_TRUTH. Restore must
+      validate stable IDs, locator metadata, versions/lifecycle fields, duplicates, and relationships without ever
+      containing or reconstructing secret values. Existing workspace/audit/repository data remains preserved.
+    - >-
+      Add create/list/archive or equivalent minimal lifecycle operations for credential references with deterministic
+      validation and audit of Argus-native metadata changes. Audit records may identify the credential-reference record
+      and operation but must contain no secret value or secret-shaped payload.
+    - >-
+      Implement a narrow macOS Keychain secret-resolution adapter/broker for a credential reference plus explicit
+      operation context. Resolution success means credential availability only; it grants no target/action authority.
+      Secret material may cross only the minimum adapter-to-consumer call boundary and must not be returned in ordinary
+      domain/application result objects, errors, logs, persistence, audit, exports, or UI.
+    - >-
+      Fail closed when the Keychain item is missing, Keychain/native capability is unavailable, locator metadata is
+      malformed, or the consumer fails. Diagnostics expose safe credential-reference identity/availability only and do
+      not echo command stdout/stderr or secret values.
+    - >-
+      Add a read-only credential availability check through the same Keychain boundary and surface credential-reference
+      metadata plus AVAILABLE/UNAVAILABLE status in the existing local UI. The UI must contain no secret-value input,
+      reveal/copy control, plaintext secret display, or browser-visible secret payload.
+    - >-
+      Provide deterministic fake-adapter tests plus one bounded native macOS Keychain integration test using a run-owned
+      isolated temporary keychain or equivalently isolated non-login-keychain fixture. The test may create and remove
+      only its own uniquely identified temporary Keychain fixture/item, must never enumerate/read operator login-keychain
+      contents, and must prove cleanup. If the current execution surface cannot safely create this isolated fixture,
+      fail CURRENT_PHASE_CAPABILITY_UNAVAILABLE rather than touching operator credentials.
+    - >-
+      Security-negative tests must mechanically prove a unique fixture secret is absent from SQLite bytes/logical rows,
+      export JSON, restore/audit data, rendered UI, safe error messages, repository diff, report artifact, and ordinary
+      application result objects. Do not rely only on code review for this invariant.
+    - >-
+      Update README only as needed to state Phase 4 credential-reference/Keychain boundary truthfully; do not document
+      .env/provider capabilities that do not exist yet.
+    - >-
+      Run fresh frozen-lockfile install, full repository-owned pnpm verify, bounded 127.0.0.1 production smoke with
+      run-owned temporary Argus data, exact migration/export/security/diff/dependency/forward-scope inspection, publish
+      one implementation commit plus one report-only direct child on main, and stop at NEEDS_REVIEW.
+
+  allowed_existing_files_or_components:
+    - existing SQLite persistence/migration/recovery/audit surfaces under src/
+    - existing application/domain surfaces under src/
+    - existing Next.js routes/UI under app/ and src/
+    - existing tests under tests/
+    - README.md if capability wording becomes stale
+    - .agent/tasks/TASK-0006/report.yaml
+  expected_files_are_restrictive: false
+
+invariants:
+  - "macOS Keychain remains the sole owner of secret values; Argus persists references/metadata only."
+  - "Credential availability is capability evidence only and never mutation/action authority."
+  - "Secret values are absent from SQLite, repository artifacts, logs, audit, exports/backups, restore documents, UI, HTTP responses, and report evidence."
+  - "No fallback secret store, encrypted secret column, environment-variable secret persistence, plaintext file, .env materialization, or browser/localStorage secret copy is introduced."
+  - "Native Keychain tests touch only run-owned isolated fixture state and never enumerate or mutate operator login-keychain credentials."
+  - "No provider integration, Git/GitHub mutation, task/agent/business feature, cloud service, branch, tag, release, workflow, deployment, queue, worker, watcher, daemon, or Phase 5+ capability is introduced."
+  - "Topology remains MAIN_ONLY exactly {main}."
+
+forbidden_changes:
+  - "Do not add secret values to credential-reference types/schema, audit reason payloads, exports, logs, errors, UI, tests/reports, or repository configuration."
+  - "Do not implement credential creation/rotation/revocation in the operator login keychain, provider credentials, OAuth flows, .env files, secret vaults, encryption-at-rest schemes, or cloud secret managers."
+  - "Do not add dependencies, ORM, SDK, provider framework, generic secret plugin registry, background process, queue, or orchestration layer."
+  - "Do not infer environment from Git branches or add environment/deployment/provider mapping in this task."
+  - "Do not mutate another repository or agent-skills/main."
+
+gap_policy:
+  local_auto_fix: true
+  scope_expansion: forbidden
+  architecture_change: forbidden
+  spec_change: forbidden
+  dependency_change: forbidden
+  public_contract_change: forbidden
+  blocking_gap_behavior: BLOCKED
+
+continuation_policy:
+  mode: MANUAL
+  stop_conditions:
+    - BLOCKED
+    - STALE_STATE
+    - AUTHORITY_REQUIRED
+    - CURRENT_PHASE_CAPABILITY_UNAVAILABLE
+    - REVIEW_REQUIRED
+    - REVERIFY_REQUIRED
+    - USER_STOP
+
+capability_requirements:
+  EXECUTION:
+    - exact_remote_ref_read
+    - repository_content_read
+    - repository_content_write
+    - native_local_execution
+    - filesystem_test_fixture_execution
+    - macos_keychain_isolated_fixture_execution
+    - package_install
+    - test_execution
+    - production_build_execution
+    - loopback_runtime_smoke
+    - exact_diff_inspection
+
+acceptance_criteria:
+  - id: AC-1
+    requirement: "Credential references are durable non-secret APP_NATIVE_TRUTH with safe lifecycle/version semantics."
+    evidence_required: >-
+      Domain/persistence tests prove create/list/archive/version behavior and schema contains only non-secret metadata;
+      migration/reopen from the prior schema is deterministic and safe.
+  - id: AC-2
+    requirement: "Export/restore preserves credential references but never secret values."
+    evidence_required: >-
+      Export/restore tests prove exact non-secret reference round-trip, malformed/duplicate rejection, existing data
+      preservation, and absence of fixture secret from serialized backup/restore content.
+  - id: AC-3
+    requirement: "Keychain resolution is narrow, transient, fail-closed, and authority-neutral."
+    evidence_required: >-
+      Fake-boundary tests prove secret is available only inside the scoped consumer call; ordinary results/errors expose
+      safe identity/availability only; missing capability/item/consumer failure does not leak secret or imply authority.
+  - id: AC-4
+    requirement: "Native macOS Keychain behavior is proven without touching operator credentials."
+    evidence_required: >-
+      Bounded integration test creates a uniquely named run-owned isolated temporary keychain/item, resolves through the
+      production boundary, proves expected non-secret outcome, removes the fixture, and shows no login-keychain enumeration.
+  - id: AC-5
+    requirement: "UI manages references/availability without secret handling."
+    evidence_required: >-
+      UI/route tests show non-secret reference metadata and AVAILABLE/UNAVAILABLE result while proving no secret input,
+      secret response body, reveal/copy control, or fixture-secret rendering.
+  - id: AC-6
+    requirement: "Secret non-leakage is mechanically verified across all ordinary durable/observable surfaces."
+    evidence_required: >-
+      A unique fixture secret is absent from SQLite bytes/logical rows, export JSON, audit, UI markup/HTTP results, safe
+      errors, exact repository diff, and report content; existing repository observation/assessment tests remain green.
+  - id: AC-7
+    requirement: "Phase 4 slice remains proportional and exact."
+    evidence_required: >-
+      Frozen install, full pnpm verify, production loopback smoke and hygiene PASS; exact diff proves no dependency,
+      provider/.env/Phase5+, branch/tag/release/workflow/deployment expansion; implementation/report lineage is exact.
+
+verification:
+  executor_checks:
+    - id: CHECK-1
+      command_or_check: "Fresh-preflight exact TASK-0006 revision/base/task blob, accepted TASK-0005 review identity, clean synchronized MAIN_ONLY state, native macOS/Keychain isolated-fixture capability, and all required EXECUTION capabilities before mutation."
+      required: true
+    - id: CHECK-2
+      command_or_check: "Run migration/persistence/lifecycle plus export/restore credential-reference tests, including malformed/duplicate/failure cases."
+      required: true
+    - id: CHECK-3
+      command_or_check: "Run fake Keychain boundary tests and bounded native isolated-temporary-keychain integration with exact fixture cleanup; never touch login-keychain contents."
+      required: true
+    - id: CHECK-4
+      command_or_check: "Run UI/route availability tests and mechanical unique-secret non-leak scan across DB/export/audit/UI/errors/result objects/repository diff/report candidate."
+      required: true
+    - id: CHECK-5
+      command_or_check: "Run existing Phase 2-3 regressions, fresh pnpm install --frozen-lockfile, full pnpm verify, then bounded 127.0.0.1 production smoke using run-owned temporary Argus data."
+      required: true
+    - id: CHECK-6
+      command_or_check: "Inspect exact diff, schema/migration, dependencies, subprocess/Keychain boundary, secrets, runtime artifacts and forward-scope terms; require no secret store, provider, .env, Phase5+, or external mutation."
+      required: true
+    - id: CHECK-7
+      command_or_check: "Publish one implementation commit plus one report-only child; re-resolve final GitHub main, parents/diffs, task/report blobs, clean local state, zero tags and topology exactly {main}."
+      required: true
+  authoritative_verification:
+    required: false
+    mechanism: ""
+    expected_signal: ""
+
+git_authority:
+  create_branch: false
+  commit: true
+  push: true
+  promote_to_main: false
+
+release_authority:
+  create_version_tag: false
+  mutate_repository_metadata: false
+  publish_release: false
+
+blocking_decisions: []
+execution_ready: true
